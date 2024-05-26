@@ -1,0 +1,415 @@
+package com.cz.game2048super;
+
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.event.EventHandler;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Scene;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.stage.Stage;
+import javafx.util.Duration;
+
+import java.io.IOException;
+import java.util.Optional;
+
+public class MainGame{
+    private static GridPane grids;//方块网格
+    private static int counter;//游戏开始的秒数
+    private static Timeline timeline;//游戏计时器
+    private static int Score;//游戏得分
+    private static GameController model;//游戏控制器
+    private static boolean ifStart;//游戏是否开始
+    private static Label ScoreLabel;//得分标签
+    private static Label Timer;//计时器标签
+    private static BorderPane borderPane;//游戏主界面
+    private static User user;//游戏账号
+    private static GameData gameData;//游戏数据库
+    private static boolean ifSave;//游戏是否保存至本地
+    private static boolean ifVisitor;//是否为游客
+    private static boolean ifOver;//游戏是否结束
+    private static Stage stage;//游戏舞台
+    private static Scene gameScene;//游戏场景
+
+    public static void LoadGame(Stage theStage,User theUser){
+        stage=theStage;
+        user=theUser;
+        ifVisitor = user.getUsername().isEmpty();
+        initVars();
+        initGameData();
+        initSettings();
+        initGame();
+    }
+
+    public static void initSettings(){
+        //initial settings 主要用于设置游戏UI和主界面
+        model=new GameController();
+        Timer = new Label("用时：0");
+        ScoreLabel = new Label("得分：0");
+        Font LabelFont = new Font("华文细黑", 30);
+        Timer.setFont(LabelFont);
+        ScoreLabel.setFont(LabelFont);
+        timeline = new Timeline(new KeyFrame(Duration.seconds(1), _ -> {
+            if (!ifOver){
+                counter++;
+            }
+            gameData.updateTimer(counter);
+            Timer.setText("用时：" + counter);
+        }));
+        timeline.setCycleCount(Timeline.INDEFINITE);
+        grids = new GridPane(10,10);
+        grids.setPrefSize(600, 600);
+        grids.setAlignment(Pos.CENTER);
+        borderPane=new BorderPane();
+        borderPane.setCenter(grids);
+        VBox vBox=new VBox(30);
+        borderPane.setLeft(vBox);
+        vBox.setAlignment(Pos.CENTER_LEFT);
+        vBox.getChildren().addAll(Timer,ScoreLabel);
+        vBox.setAlignment(Pos.CENTER);
+        VBox.setMargin(Timer, new Insets(40));
+        VBox.setMargin(ScoreLabel, new Insets(40));
+        Button startButton = new Button("开始游戏");
+        startButton.setMinWidth(100);
+        startButton.setMinHeight(50);
+        startButton.setAlignment(Pos.CENTER);
+        Button restartButton = new Button("重新开始");
+        restartButton.setMinWidth(100);
+        restartButton.setMinHeight(50);
+        restartButton.setAlignment(Pos.CENTER);
+        StackPane ButtonPane = new StackPane();
+        ButtonPane.getChildren().add(startButton);
+        // 设置StackPane的对齐方式
+        StackPane.setAlignment(startButton, Pos.CENTER);
+        // 使用边距来进一步微调位置
+        StackPane.setMargin(startButton, new Insets(0, 0, 50, 0)); // 向上偏移
+        borderPane.setBottom(ButtonPane);
+        gameScene = new Scene(borderPane, 880, 660);
+        startButton.setOnAction(_ -> {
+            timeline.play();
+            ifStart = true;
+            ButtonPane.getChildren().remove(startButton);
+            ButtonPane.getChildren().add(restartButton);
+            StackPane.setAlignment(restartButton, Pos.CENTER);
+            StackPane.setMargin(restartButton, new Insets(0, 0, 50, 0)); // 向上偏移
+        });
+        restartButton.setOnAction(_ -> restartGame());
+        if (!ifVisitor){
+            Button saveButton = new Button("保存");
+            saveButton.setMinWidth(80);
+            saveButton.setMinHeight(40);
+            saveButton.setAlignment(Pos.CENTER);
+            StackPane saveButtonPane = new StackPane();
+            saveButtonPane.getChildren().add(saveButton);
+            StackPane.setAlignment(saveButtonPane,Pos.CENTER);
+            StackPane.setMargin(saveButtonPane, new Insets(0, 0, -50, 0));
+            borderPane.setTop(saveButtonPane);
+            saveButtonPane.setOnMouseClicked(_ -> {
+                try {
+                    gameData.saveGameData();
+                    ifSave = true;
+                    playGame();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+            if (!ifSave){
+                stage.setOnCloseRequest(event -> {
+                    event.consume(); // 阻止默认关闭行为
+                    try {
+                        giveSaveWarning();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
+        }
+        stage.setTitle("2048");
+        stage.setScene(gameScene);
+        stage.show();
+    }
+
+    public static void initVars(){
+        //initial Variables 初始化变量和游戏数据
+        ifOver = false;
+        counter = 0;
+        Score = 0;
+        ifStart = false;
+        ifSave = false;
+    }
+
+    public static void initGameData(){
+        gameData = new GameData(user.getUsername());
+        //确认该用户是已经注册且有存档 还是新注册未有存档
+        try{
+            if (!ifVisitor && gameData.ifFoundUserData()){
+                //非游客登录 且有存档 可以选择以前存档或开始新游戏
+                Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                alert.setTitle("游戏选项");
+                alert.setHeaderText(user.getUsername()+",检测到您已有存档，请选择要执行的操作：");
+                alert.setContentText("注意：开始新游戏会覆盖原有存档，但不会影响您的记录");
+                // 定义“开始新游戏”按钮
+                ButtonType startNewGameButton = new ButtonType("开始新游戏");
+                // 定义“载入存档”按钮
+                ButtonType loadGameButton = new ButtonType("载入存档");
+                // 将按钮添加到对话框中
+                alert.getButtonTypes().setAll(startNewGameButton, loadGameButton);
+                // 显示对话框并等待用户响应
+                Optional<ButtonType> result = alert.showAndWait();
+                // 根据用户的选择执行相应的操作
+                if (result.isPresent() && result.get() == startNewGameButton) {
+                    // 用户选择开始新游戏，执行相关操作
+                    gameData.initGameData();
+                    gameData.loadGameRecord();
+                } else if (result.isPresent() && result.get() == loadGameButton) {
+                    // 用户选择载入存档，执行相关操作
+                    gameData.loadGameData();
+                }
+            } else {
+                //无存档或是游客 直接开始新游戏
+                gameData.initGameData();
+            }
+        } catch (IOException e){
+            e.printStackTrace();
+        }
+    }
+
+    public static void initGame(){
+        //载入游戏数据
+        model.setGridnums(gameData.getGridsLast());
+        Score = gameData.getScoreLast();
+        counter = gameData.getTimerLast();
+        updateGridsByNums(model.getGridnums());
+        ScoreLabel.setText("得分："+Score);
+        Timer.setText("用时："+counter);
+        playGame();
+        borderPane.requestFocus();
+    }
+
+    public static void playGame(){
+        //Game starts
+        //键盘事件逻辑
+        // 创建并注册全局键盘事件过滤器
+        EventHandler<KeyEvent> keyEventHandler = event -> {
+            // 处理键盘事件
+            if(!ifStart) return;
+            switch(event.getCode()) {
+                case UP:
+                    System.out.println("UP");
+                    doMoveUp();
+                    break;
+                case DOWN:
+                    System.out.println("DOWN");
+                    doMoveDown();
+                    break;
+                case LEFT:
+                    System.out.println("LEFT");
+                    doMoveLeft();
+                    break;
+                case RIGHT:
+                    System.out.println("RIGHT");
+                    doMoveRight();
+                    break;
+            }
+        };
+        // 将事件过滤器添加到场景中
+        gameScene.addEventFilter(KeyEvent.KEY_PRESSED, keyEventHandler);
+    }
+
+    public static void restartGame(){
+        //confirm the option
+        if (!ifVisitor){
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("");
+            alert.setHeaderText("您确定要重新开始吗？");
+            alert.setContentText("您游玩过程中的数据可能尚未保存");
+            Optional<ButtonType> result = alert.showAndWait();
+            if (result.isPresent() && result.get() == ButtonType.OK){
+                //restart the game
+                initVars();
+                ifStart = true;
+                try {
+                    gameData.initGameData();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                initGame();
+            }
+        } else{
+            initVars();
+            ifStart = true;
+            try {
+                gameData.initGameData();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            initGame();
+        }
+    }
+
+    public static void giveSaveWarning() throws IOException {
+        //confirm the option
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("");
+        alert.setHeaderText("您确定要退出吗");
+        alert.setContentText("您游玩过程中的数据将会被自动保存");
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == ButtonType.OK){
+            //save the game
+            gameData.saveGameData();
+            stage.close();
+        }
+    }
+
+    public static void changeGrid(int x,int y,int index){
+        grids.getChildren().removeIf(node ->
+                GridPane.getColumnIndex(node) == x && GridPane.getRowIndex(node) == y
+        );
+        grids.add(new Diamond(index).getRoot(),x,y);
+    }
+
+    /*上下左右的执行逻辑：
+     * 1.合并方块（先判断是否有动作）
+     * 2.计算得分
+     * 3.生成新的方块
+     */
+    public static void doMoveUp(){
+        //完成gridsnum的更新 和 计算得分
+        Score+=model.AStep(1);
+        afterMove();
+    }
+
+    public static void doMoveDown(){
+        Score+=model.AStep(2);
+        afterMove();
+    }
+
+    public static void doMoveLeft(){
+        Score+=model.AStep(3);
+        afterMove();
+    }
+
+    public static void doMoveRight(){
+        Score+=model.AStep(4);
+        afterMove();
+    }
+
+    public static void updateGridsByNums(int[][] nums){
+        for (int i = 0; i < 4; i++) {
+            for (int j = 0; j < 4; j++) {
+                changeGrid(j,i,nums[i][j]);
+            }
+        }
+    }
+
+    public static void gameWin(){
+        //先将最高分数保存 在随后的操作里清零
+        try {
+            gameData.saveGameData();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        //记录此账号的通关记录
+        gameData.setIfHaveWon(true);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("游戏通关");
+        String text = "恭喜你成功通关了2048:\n您的本次得分为："+Score+"\n您的本次用时为："+counter+"秒\n您的历史最高得分为："+gameData.getScoreBest()+"\n";
+        alert.setHeaderText(text);
+        alert.setContentText("继续你的旅程吗？");
+        ButtonType startNewGameButton = new ButtonType("再来一次");
+        ButtonType outGameButton = new ButtonType("就此退出");
+        alert.getButtonTypes().setAll(startNewGameButton, outGameButton);
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == startNewGameButton) {
+            // 用户选择再来一次，执行相关操作
+            initVars();
+            ifStart = true;
+            try {
+                gameData.initGameData();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            initGame();
+        } else if (result.isPresent() && result.get() == outGameButton)  {
+            //将状态信息归零
+            try {
+                gameData.initGameData();
+                gameData.saveGameData();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            stage.close();
+        }
+    }
+
+    public static void gameOver(){
+        ifOver=true;//停止时间
+        //先将最高分数保存 在随后的操作里清零
+        try {
+            gameData.saveGameData();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle("游戏结算");
+        String text = "本次游戏结束了：\n您的本次得分为："+Score+"\n您的本次用时为："+counter+"秒\n您的历史最高得分为："+gameData.getScoreBest()+"\n";
+        if (gameData.getIfHaveWon()){
+            text+="您已经成功通关过2048";
+        } else {
+            text+="您尚未成功通关过2048";
+        }
+        alert.setHeaderText(text);
+        alert.setContentText("继续你的旅程吗？");
+        ButtonType startNewGameButton = new ButtonType("再来一次");
+        ButtonType outGameButton = new ButtonType("就此退出");
+        alert.getButtonTypes().setAll(startNewGameButton, outGameButton);
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.isPresent() && result.get() == startNewGameButton) {
+            // 用户选择再来一次，执行相关操作
+            initVars();
+            ifStart = true;
+            try {
+                gameData.initGameData();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            initGame();
+        } else if (result.isPresent() && result.get() == outGameButton)  {
+            //将状态信息归零
+            try {
+                gameData.initGameData();
+                gameData.saveGameData();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            stage.close();
+        }
+    }
+
+    public static void afterMove(){
+        ScoreLabel.setText("得分: "+Score);
+        gameData.updateGameData(Score,counter,model.getGridnums());
+        //Judge if the player wins
+        if (model.isWin()){
+            updateGridsByNums(model.getGridnums());
+            gameWin();
+        } else if (model.isGameOver()){
+            updateGridsByNums(model.getGridnums());
+            gameOver();
+        } else {
+            model.createNewGrid();
+            updateGridsByNums(model.getGridnums());
+            gameData.updateGameData(Score,counter,model.getGridnums());
+            ifSave = false;
+        }
+    }
+}
