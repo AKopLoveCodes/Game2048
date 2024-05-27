@@ -3,7 +3,6 @@ package com.cz.game2048super;
 import java.util.Random;
 
 public class GameController {
-    //TODO: implement game logic here
     private int[][] gridnums;
 
     public GameController(){

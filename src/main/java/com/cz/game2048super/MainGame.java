@@ -78,6 +78,7 @@ public class MainGame{
         vBox.setAlignment(Pos.CENTER);
         VBox.setMargin(Timer, new Insets(40));
         VBox.setMargin(ScoreLabel, new Insets(40));
+        vBox.setPrefWidth(300);
         Button startButton = new Button("开始游戏");
         startButton.setMinWidth(100);
         startButton.setMinHeight(50);
@@ -203,23 +204,20 @@ public class MainGame{
             // 处理键盘事件
             if(!ifStart) return;
             switch(event.getCode()) {
-                case UP:
-                    System.out.println("UP");
+                case UP, W:
                     doMoveUp();
                     break;
-                case DOWN:
-                    System.out.println("DOWN");
+                case DOWN, S:
                     doMoveDown();
                     break;
-                case LEFT:
-                    System.out.println("LEFT");
+                case LEFT, A:
                     doMoveLeft();
                     break;
-                case RIGHT:
-                    System.out.println("RIGHT");
+                case RIGHT, D:
                     doMoveRight();
                     break;
             }
+            afterMove();
         };
         // 将事件过滤器添加到场景中
         gameScene.addEventFilter(KeyEvent.KEY_PRESSED, keyEventHandler);
@@ -285,22 +283,18 @@ public class MainGame{
     public static void doMoveUp(){
         //完成gridsnum的更新 和 计算得分
         Score+=model.AStep(1);
-        afterMove();
     }
 
     public static void doMoveDown(){
         Score+=model.AStep(2);
-        afterMove();
     }
 
     public static void doMoveLeft(){
         Score+=model.AStep(3);
-        afterMove();
     }
 
     public static void doMoveRight(){
         Score+=model.AStep(4);
-        afterMove();
     }
 
     public static void updateGridsByNums(int[][] nums){

@@ -45,7 +45,7 @@ public class GameData implements Serializable{
     private static String[] getLastData() throws IOException {
         //将用户名下的数据提取出来 找到最新的存档并加载
         List<String> dataList = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader("data/GameData.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/assets/data/GameData.txt"))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 dataList.add(line);
@@ -64,7 +64,7 @@ public class GameData implements Serializable{
     public boolean ifFoundUserData() throws IOException{
         //确认该用户是已经注册且有存档 还是新注册未有存档
         boolean ifFound = false;
-        try (BufferedReader reader = new BufferedReader(new FileReader("data/GameData.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/assets/data/GameData.txt"))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] data = line.split(",");
@@ -114,7 +114,7 @@ public class GameData implements Serializable{
 
     public void saveGameData() throws IOException{
         //将现有的游戏数据保存至本地文档
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("data/GameData.txt", true))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/resources/assets/data/GameData.txt", true))) {
             writer.write(username + "," + this.scoreLast + "," + this.scoreBest + "," + this.TimerLast + ",");
             for (int i = 0; i < 4; i++) {
                 for (int j = 0; j < 4; j++) {

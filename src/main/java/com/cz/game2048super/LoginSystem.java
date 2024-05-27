@@ -172,7 +172,7 @@ public class LoginSystem {
     }
 
     public static void SaveUserToRegistry(User user) throws IOException {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("data/UserRegistry.txt", true))) {
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("src/main/resources/assets/data/UserRegistry.txt", true))) {
             writer.write(user.toString());
             writer.newLine();
         }
@@ -181,7 +181,7 @@ public class LoginSystem {
     public static boolean CheckUser(String username,String password) throws IOException {
         boolean ifExist=false;
         List<User> users = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader("data/UserRegistry.txt"))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/assets/data/UserRegistry.txt"))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 users.add(User.getUserRegistry(line));

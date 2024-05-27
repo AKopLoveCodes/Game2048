@@ -11,12 +11,10 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
 public class Diamond {
-    private static int index;
     private static StackPane root;
 
     public Diamond(){
         //空方块的设定
-        index=0;
         root=new StackPane();
         Rectangle rect=new Rectangle(100,100);
         rect.setArcWidth(30);  // 设置圆角矩形的水平圆角弧度
@@ -27,7 +25,6 @@ public class Diamond {
 
     public Diamond(int num){
         //特定数字方块的设定
-        index=num;
         root=new StackPane();
         Rectangle rect=new Rectangle(100,100);
         rect.setArcWidth(30);  // 设置圆角矩形的水平圆角弧度
@@ -107,7 +104,4 @@ public class Diamond {
         return root;
     }
 
-    public int getIndex(){
-        return index;
-    }
 }
