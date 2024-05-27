@@ -59,7 +59,7 @@ public class MainGame{
         Timer.setFont(LabelFont);
         ScoreLabel.setFont(LabelFont);
         timeline = new Timeline(new KeyFrame(Duration.seconds(1), _ -> {
-            if (!ifOver){
+            if (!ifOver && ifStart){
                 counter++;
             }
             gameData.updateTimer(counter);
@@ -114,11 +114,19 @@ public class MainGame{
             StackPane.setAlignment(saveButtonPane,Pos.CENTER);
             StackPane.setMargin(saveButtonPane, new Insets(0, 0, -50, 0));
             borderPane.setTop(saveButtonPane);
-            saveButtonPane.setOnMouseClicked(_ -> {
+            saveButton.setOnMouseClicked(_ -> {
                 try {
                     gameData.saveGameData();
                     ifSave = true;
-                    playGame();
+                    ifStart = false;
+                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    alert.setTitle("保存成功");
+                    alert.setHeaderText("游戏存档已成功保存");
+                    alert.setContentText("");
+                    Optional <ButtonType> result = alert.showAndWait();
+                    if (result.isPresent() && result.get() == ButtonType.OK) {
+                        playGame();
+                    }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -200,6 +208,7 @@ public class MainGame{
         //Game starts
         //键盘事件逻辑
         // 创建并注册全局键盘事件过滤器
+        ifStart = true;
         EventHandler<KeyEvent> keyEventHandler = event -> {
             // 处理键盘事件
             if(!ifStart) return;
@@ -263,7 +272,9 @@ public class MainGame{
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK){
             //save the game
-            gameData.saveGameData();
+            if (!ifVisitor){
+                gameData.saveGameData();
+            }
             stage.close();
         }
     }

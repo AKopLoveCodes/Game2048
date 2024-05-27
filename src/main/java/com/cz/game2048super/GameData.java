@@ -53,9 +53,17 @@ public class GameData implements Serializable{
         }
         String[] newData = new String[21];
         for (String line : dataList) {
-            String[] data = line.split(",");
-            if (data[0].equals(username)) {
-                newData = data;
+            String[] data;
+            try {
+                data = line.split(",");
+                if (data.length!=21){
+                    continue;
+                }
+                if (data[0].equals(username)) {
+                    newData = data;
+                }
+            } catch (Exception e){
+                System.out.println("data format error");
             }
         }
         return newData;
@@ -67,10 +75,18 @@ public class GameData implements Serializable{
         try (BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/assets/data/GameData.txt"))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] data = line.split(",");
-                if (data[0].equals(username)) {
-                    ifFound = true;
-                    break;
+                String[] data;
+                try {
+                    data = line.split(",");
+                    if (data.length!=21){
+                        continue;
+                    }
+                    if (data[0].equals(username)) {
+                        ifFound = true;
+                        break;
+                    }
+                } catch (Exception e){
+                    System.out.println("data format error");
                 }
             }
         }
@@ -124,6 +140,7 @@ public class GameData implements Serializable{
             writer.write(this.ifHaveWon+"");
             writer.newLine();
         }
+        System.out.println("save success");
     }
 
     public void updateGameData(int score, int Timer, int[][] grids){

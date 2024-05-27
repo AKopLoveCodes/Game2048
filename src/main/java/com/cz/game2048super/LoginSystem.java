@@ -188,6 +188,9 @@ public class LoginSystem {
             }
         }
         for (User user : users) {
+            if (user == null){
+                continue;
+            }
             if (user.getUsername().equals(username) && user.getPassword().equals(password)) {
                 ifExist = true;
                 break;

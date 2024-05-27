@@ -27,8 +27,17 @@ public class User implements Serializable{
     }
 
     public static User getUserRegistry(String str) {
-        String[] strs = str.split(",");
-        return new User(strs[0], strs[1]);
+        try{
+            String[] strs = str.split(",");
+            if (strs.length==2){
+                return new User(strs[0], strs[1]);
+            } else {
+                return null;
+            }
+        } catch (Exception e){
+            System.out.println("读取本地文件错误");
+            return null;
+        }
     }
 
     public String getUsername() {
