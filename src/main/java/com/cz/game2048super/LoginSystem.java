@@ -3,9 +3,8 @@ package com.cz.game2048super;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.StackPane;
+import javafx.scene.image.Image;
+import javafx.scene.layout.*;
 import javafx.stage.Stage;
 
 import java.io.*;
@@ -44,8 +43,10 @@ public class LoginSystem {
         gridPane.add(buttonBox, 2, 3);
         // 将GridPane添加到StackPane中
         stackPane.getChildren().add(gridPane);
+        Image image = new Image("file:src/main/resources/pictures/wallhaven-l8wvzl.jpg");
+        stackPane.setBackground(new Background(new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(100, 100, true, true, false, true))));
         // 创建Scene并设置到Stage
-        Scene Loginscene = new Scene(stackPane, 400, 300);
+        Scene Loginscene = new Scene(stackPane, 768, 432);
         stage.setTitle("登录界面");
         stage.setScene(Loginscene);
         stage.show();
@@ -53,7 +54,7 @@ public class LoginSystem {
         loginButton.setOnAction(_ -> {
             //检测是否存在该账号
             try{
-                if (CheckUser(userNameField.getText(), passwordField.getText())){
+                if (CheckUser(userNameField.getText(),passwordField.getText())){
                     // 登录成功，跳转到游戏界面
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
                     alert.setTitle("");
@@ -133,7 +134,7 @@ public class LoginSystem {
             } else {
                 // 检查用户名是否已存在
                 try {
-                    if (CheckUser(userNameField.getText(),passwordField.getText())){
+                    if (CheckUser(userNameField.getText())){
                         //用户名已存在
                         Alert alert = new Alert(Alert.AlertType.WARNING);
                         alert.setTitle("");
@@ -176,6 +177,27 @@ public class LoginSystem {
             writer.write(user.toString());
             writer.newLine();
         }
+    }
+
+    public static boolean CheckUser(String username) throws IOException {
+        boolean ifExist=false;
+        List<User> users = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/assets/data/UserRegistry.txt"))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                users.add(User.getUserRegistry(line));
+            }
+        }
+        for (User user : users) {
+            if (user == null){
+                continue;
+            }
+            if (user.getUsername().equals(username)) {
+                ifExist = true;
+                break;
+            }
+        }
+        return ifExist;
     }
 
     public static boolean CheckUser(String username,String password) throws IOException {

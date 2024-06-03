@@ -245,7 +245,9 @@ public class MainGame{
                 initVars();
                 ifStart = true;
                 try {
-                    gameData.initGameData();
+                    if (!ifVisitor){
+                        gameData.initGameData();
+                    }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -317,6 +319,7 @@ public class MainGame{
     }
 
     public static void gameWin(){
+        ifOver = true;
         //先将最高分数保存 在随后的操作里清零
         try {
             gameData.saveGameData();
@@ -407,7 +410,7 @@ public class MainGame{
         if (model.isWin()){
             updateGridsByNums(model.getGridnums());
             gameWin();
-        } else if (model.isGameOver()){
+        } else if (model.isGameOver()) {
             updateGridsByNums(model.getGridnums());
             gameOver();
         } else {
