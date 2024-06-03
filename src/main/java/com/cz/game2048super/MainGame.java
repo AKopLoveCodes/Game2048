@@ -10,11 +10,10 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Duration;
@@ -39,8 +38,10 @@ public class MainGame{
     private static boolean ifOver;//游戏是否结束
     private static Stage stage;//游戏舞台
     private static Scene gameScene;//游戏场景
+    private static int choice;//游戏模式
 
-    public static void LoadGame(Stage theStage,User theUser){
+    public static void LoadGame(Stage theStage,User theUser,int theChoice){
+        choice=theChoice;
         stage=theStage;
         user=theUser;
         ifVisitor = user.getUsername().isEmpty();
@@ -54,8 +55,10 @@ public class MainGame{
         //initial settings 主要用于设置游戏UI和主界面
         model=new GameController();
         Timer = new Label("用时：0");
+        Timer.setTextFill(Color.WHITE);
         ScoreLabel = new Label("得分：0");
-        Font LabelFont = new Font("华文细黑", 30);
+        ScoreLabel.setTextFill(Color.WHITE);
+        Font LabelFont = new Font("华文中宋", 35);
         Timer.setFont(LabelFont);
         ScoreLabel.setFont(LabelFont);
         timeline = new Timeline(new KeyFrame(Duration.seconds(1), _ -> {
@@ -71,13 +74,11 @@ public class MainGame{
         grids.setAlignment(Pos.CENTER);
         borderPane=new BorderPane();
         borderPane.setCenter(grids);
-        VBox vBox=new VBox(30);
+        VBox vBox=new VBox(15);
         borderPane.setLeft(vBox);
-        vBox.setAlignment(Pos.CENTER_LEFT);
         vBox.getChildren().addAll(Timer,ScoreLabel);
-        vBox.setAlignment(Pos.CENTER);
+        vBox.setAlignment(Pos.TOP_CENTER);
         VBox.setMargin(Timer, new Insets(40));
-        VBox.setMargin(ScoreLabel, new Insets(40));
         vBox.setPrefWidth(300);
         Button startButton = new Button("开始游戏");
         startButton.setMinWidth(100);
@@ -94,7 +95,14 @@ public class MainGame{
         // 使用边距来进一步微调位置
         StackPane.setMargin(startButton, new Insets(0, 0, 50, 0)); // 向上偏移
         borderPane.setBottom(ButtonPane);
-        gameScene = new Scene(borderPane, 880, 660);
+        gameScene = new Scene(borderPane, 1050, 600);
+        if (choice==0){
+            Image backgroundImage = new Image("file:src/main/resources/pictures/wallhaven-2yxp16.jpg");
+            borderPane.setBackground(new Background(new BackgroundImage(backgroundImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(100, 100, true, true, false, true))));
+        } else if (choice==1){
+            Image backgroundImage = new Image("file:src/main/resources/pictures/wallhaven-wekp5x.jpg");
+            borderPane.setBackground(new Background(new BackgroundImage(backgroundImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(100, 100, true, true, false, true))));
+        }
         startButton.setOnAction(_ -> {
             timeline.play();
             ifStart = true;
@@ -104,7 +112,7 @@ public class MainGame{
             StackPane.setMargin(restartButton, new Insets(0, 0, 50, 0)); // 向上偏移
         });
         restartButton.setOnAction(_ -> restartGame());
-        if (!ifVisitor){
+        if (!ifVisitor && choice==0){
             Button saveButton = new Button("保存");
             saveButton.setMinWidth(80);
             saveButton.setMinHeight(40);
@@ -135,7 +143,9 @@ public class MainGame{
                 stage.setOnCloseRequest(event -> {
                     event.consume(); // 阻止默认关闭行为
                     try {
-                        giveSaveWarning();
+                        if (!ifVisitor && choice==0){
+                            giveSaveWarning();
+                        }
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -160,7 +170,7 @@ public class MainGame{
         gameData = new GameData(user.getUsername());
         //确认该用户是已经注册且有存档 还是新注册未有存档
         try{
-            if (!ifVisitor && gameData.ifFoundUserData()){
+            if (!ifVisitor && gameData.ifFoundUserData() && choice==0){
                 //非游客登录 且有存档 可以选择以前存档或开始新游戏
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("游戏选项");
@@ -177,7 +187,7 @@ public class MainGame{
                 // 根据用户的选择执行相应的操作
                 if (result.isPresent() && result.get() == startNewGameButton) {
                     // 用户选择开始新游戏，执行相关操作
-                    gameData.initGameData();
+                    gameData.initGameData(choice);
                     gameData.loadGameRecord();
                 } else if (result.isPresent() && result.get() == loadGameButton) {
                     // 用户选择载入存档，执行相关操作
@@ -185,7 +195,7 @@ public class MainGame{
                 }
             } else {
                 //无存档或是游客 直接开始新游戏
-                gameData.initGameData();
+                gameData.initGameData(choice);
             }
         } catch (IOException e){
             e.printStackTrace();
@@ -234,7 +244,7 @@ public class MainGame{
 
     public static void restartGame(){
         //confirm the option
-        if (!ifVisitor){
+        if (!ifVisitor && choice==0){
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("");
             alert.setHeaderText("您确定要重新开始吗？");
@@ -245,9 +255,7 @@ public class MainGame{
                 initVars();
                 ifStart = true;
                 try {
-                    if (!ifVisitor){
-                        gameData.initGameData();
-                    }
+                    gameData.initGameData(choice);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -257,7 +265,7 @@ public class MainGame{
             initVars();
             ifStart = true;
             try {
-                gameData.initGameData();
+                gameData.initGameData(choice);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -274,9 +282,7 @@ public class MainGame{
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK){
             //save the game
-            if (!ifVisitor){
-                gameData.saveGameData();
-            }
+            gameData.saveGameData();
             stage.close();
         }
     }
@@ -321,16 +327,18 @@ public class MainGame{
     public static void gameWin(){
         ifOver = true;
         //先将最高分数保存 在随后的操作里清零
-        try {
-            gameData.saveGameData();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (!ifVisitor && choice==0){
+            try {
+                gameData.saveGameData();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         //记录此账号的通关记录
         gameData.setIfHaveWon(true);
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("游戏通关");
-        String text = "恭喜你成功通关了2048:\n您的本次得分为："+Score+"\n您的本次用时为："+counter+"秒\n您的历史最高得分为："+gameData.getScoreBest()+"\n";
+        String text = "恭喜你成功通关了此模式:\n您的本次得分为："+Score+"\n您的本次用时为："+counter+"秒\n您的历史最高得分为："+gameData.getScoreBest()+"\n";
         alert.setHeaderText(text);
         alert.setContentText("继续你的旅程吗？");
         ButtonType startNewGameButton = new ButtonType("再来一次");
@@ -342,18 +350,20 @@ public class MainGame{
             initVars();
             ifStart = true;
             try {
-                gameData.initGameData();
+                gameData.initGameData(choice);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
             initGame();
         } else if (result.isPresent() && result.get() == outGameButton)  {
             //将状态信息归零
-            try {
-                gameData.initGameData();
-                gameData.saveGameData();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            if (!ifVisitor && choice==0){
+                try {
+                    gameData.initGameData(choice);
+                    gameData.saveGameData();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
             stage.close();
         }
@@ -362,18 +372,20 @@ public class MainGame{
     public static void gameOver(){
         ifOver=true;//停止时间
         //先将最高分数保存 在随后的操作里清零
-        try {
-            gameData.saveGameData();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (!ifVisitor && choice==0){
+            try {
+                gameData.saveGameData();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("游戏结算");
         String text = "本次游戏结束了：\n您的本次得分为："+Score+"\n您的本次用时为："+counter+"秒\n您的历史最高得分为："+gameData.getScoreBest()+"\n";
         if (gameData.getIfHaveWon()){
-            text+="您已经成功通关过2048";
+            text+="您已经成功通关过此模式";
         } else {
-            text+="您尚未成功通关过2048";
+            text+="您尚未成功通关过此模式";
         }
         alert.setHeaderText(text);
         alert.setContentText("继续你的旅程吗？");
@@ -386,18 +398,20 @@ public class MainGame{
             initVars();
             ifStart = true;
             try {
-                gameData.initGameData();
+                gameData.initGameData(choice);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
             initGame();
         } else if (result.isPresent() && result.get() == outGameButton)  {
             //将状态信息归零
-            try {
-                gameData.initGameData();
-                gameData.saveGameData();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
+            if (!ifVisitor && choice==0){
+                try {
+                    gameData.initGameData(choice);
+                    gameData.saveGameData();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             }
             stage.close();
         }

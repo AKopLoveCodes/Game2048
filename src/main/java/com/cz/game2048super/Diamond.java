@@ -38,6 +38,14 @@ public class Diamond {
                 rect.setFill(Color.web("#cccccc"));
                 text.setText("");//空方块
                 break;
+            case 1:
+                rect.setFill(new LinearGradient(
+                        0.0,0.0,1.0,0.0,true,CycleMethod.NO_CYCLE,
+                        new Stop(0.0,new Color( 0.1, 0.2, 0.22, 1.0)),
+                        new Stop(0.5,new Color( 0.18, 0.31, 0.35, 1.0)),
+                        new Stop(1.0,new Color( 0.22, 0.41, 0.49, 1.0))));
+                text.setText("");//障碍方块
+                break;
             case 2:
                 rect.setFill(Color.web("#ffcc99"));
                 text.setText("2");

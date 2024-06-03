@@ -62,7 +62,7 @@ public class LoginSystem {
                     alert.setContentText("欢迎进入游戏");
                     alert.showAndWait();
                     stage.close();
-                    MainGame.LoadGame(stage,new User(userNameField.getText(),passwordField.getText()));
+                    Choice.ChooseModel(stage,new User(userNameField.getText(),passwordField.getText()));
                 } else {
                     // 登录失败，弹出提示框
                     Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -88,7 +88,7 @@ public class LoginSystem {
             if (result.isPresent() && result.get() == ButtonType.OK) {
                 // 用户点击了“确定”
                 stage.close();
-                MainGame.LoadGame(stage,new User());
+                Choice.ChooseModel(stage,new User(userNameField.getText(),passwordField.getText()));
             }
         });
     }
@@ -118,7 +118,9 @@ public class LoginSystem {
         // 将GridPane添加到StackPane中
         stackPane.getChildren().add(gridPane);
         // 创建Scene并设置到Stage
-        Scene registerScene = new Scene(stackPane, 400, 300);
+        Image image = new Image("file:src/main/resources/pictures/wallhaven-l8wvzl.jpg");
+        stackPane.setBackground(new Background(new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(100, 100, true, true, false, true))));
+        Scene registerScene = new Scene(stackPane, 768, 432);
         stage.setTitle("注册界面");
         stage.setScene(registerScene);
         stage.show();
