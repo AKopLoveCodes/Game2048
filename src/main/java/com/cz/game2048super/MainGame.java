@@ -2,6 +2,7 @@ package com.cz.game2048super;
 
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -64,6 +65,11 @@ public class MainGame{
         timeline = new Timeline(new KeyFrame(Duration.seconds(1), _ -> {
             if (!ifOver && ifStart){
                 counter++;
+                if (choice==2 && counter==200){
+                    System.out.println("时间到了");
+                    ifOver=true;
+                    Platform.runLater(MainGame::gameOver);
+                }
             }
             gameData.updateTimer(counter);
             Timer.setText("用时：" + counter);
@@ -101,6 +107,9 @@ public class MainGame{
             borderPane.setBackground(new Background(new BackgroundImage(backgroundImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(100, 100, true, true, false, true))));
         } else if (choice==1){
             Image backgroundImage = new Image("file:src/main/resources/pictures/wallhaven-wekp5x.jpg");
+            borderPane.setBackground(new Background(new BackgroundImage(backgroundImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(100, 100, true, true, false, true))));
+        } else if (choice==2){
+            Image backgroundImage = new Image("file:src/main/resources/pictures/wallhaven-d6z98o.jpg");
             borderPane.setBackground(new Background(new BackgroundImage(backgroundImage, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(100, 100, true, true, false, true))));
         }
         startButton.setOnAction(_ -> {
@@ -218,7 +227,6 @@ public class MainGame{
         //Game starts
         //键盘事件逻辑
         // 创建并注册全局键盘事件过滤器
-        ifStart = true;
         EventHandler<KeyEvent> keyEventHandler = event -> {
             // 处理键盘事件
             if(!ifStart) return;

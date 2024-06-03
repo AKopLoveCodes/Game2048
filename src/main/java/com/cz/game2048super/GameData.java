@@ -123,10 +123,10 @@ public class GameData implements Serializable{
         x2=num2%4;
         y1=num1/4;
         y2=num2/4;
-        if (choice==0){
-            gridsLast[x1][y1]=4;
-        } else if (choice==1){
+        if (choice==1){
             gridsLast[x1][y1]=1;
+        } else {
+            gridsLast[x1][y1]=4;
         }
         gridsLast[x2][y2]=2;
         this.ifHaveWon = false;

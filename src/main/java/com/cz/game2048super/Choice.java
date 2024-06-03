@@ -19,10 +19,12 @@ public class Choice {
         Label labelTitle = new Label("请选择游戏模式:");
         Label labelSingle = new Label("传统模式");
         Label labelBlock = new Label("障碍模式");
+        Label labelTime = new Label("限时模式\n(200s)");
         labelTitle.setFont(font);
         labelSingle.setFont(font);
         labelBlock.setFont(font);
-        root.getChildren().addAll(labelTitle,labelSingle,labelBlock);
+        labelTime.setFont(font);
+        root.getChildren().addAll(labelTitle,labelSingle,labelBlock,labelTime);
         VBox.setMargin(labelTitle, new Insets(40));
         Scene scene = new Scene(root,460,820);
         stage.setScene(scene);
@@ -34,6 +36,10 @@ public class Choice {
         labelBlock.setOnMouseClicked(_ -> {
             stage.close();
             MainGame.LoadGame(stage,user,1);
+        });
+        labelTime.setOnMouseClicked(_ -> {
+            stage.close();
+            MainGame.LoadGame(stage,user,2);
         });
     }
 }
