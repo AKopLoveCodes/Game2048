@@ -11,14 +11,18 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.media.Media;
 import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 
@@ -40,6 +44,7 @@ public class MainGame{
     private static Stage stage;//游戏舞台
     private static Scene gameScene;//游戏场景
     private static int choice;//游戏模式
+    private static MediaPlayer bgm;//游戏背景音乐
 
     public static void LoadGame(Stage theStage,User theUser,int theChoice){
         choice=theChoice;
@@ -53,6 +58,8 @@ public class MainGame{
     }
 
     public static void initSettings(){
+        //重设窗口关闭逻辑 防止因Choice界面的设定而干扰游戏界面退出
+        stage.setOnCloseRequest(_ -> {});
         //initial settings 主要用于设置游戏UI和主界面
         model=new GameController();
         Timer = new Label("用时：0");
@@ -65,7 +72,7 @@ public class MainGame{
         timeline = new Timeline(new KeyFrame(Duration.seconds(1), _ -> {
             if (!ifOver && ifStart){
                 counter++;
-                if (choice==2 && counter==200){
+                if (choice==2 && counter==60){
                     System.out.println("时间到了");
                     ifOver=true;
                     Platform.runLater(MainGame::gameOver);
@@ -101,6 +108,10 @@ public class MainGame{
         // 使用边距来进一步微调位置
         StackPane.setMargin(startButton, new Insets(0, 0, 50, 0)); // 向上偏移
         borderPane.setBottom(ButtonPane);
+        ImageView exitButton = new ImageView(new Image("file:src/main/resources/pictures/exit.png"));
+        exitButton.setFitWidth(50);
+        exitButton.setFitHeight(50);
+        borderPane.setRight(exitButton);
         gameScene = new Scene(borderPane, 1050, 600);
         if (choice==0){
             Image backgroundImage = new Image("file:src/main/resources/pictures/wallhaven-2yxp16.jpg");
@@ -142,6 +153,7 @@ public class MainGame{
                     alert.setContentText("");
                     Optional <ButtonType> result = alert.showAndWait();
                     if (result.isPresent() && result.get() == ButtonType.OK) {
+                        ifStart = true;
                         playGame();
                     }
                 } catch (IOException e) {
@@ -152,8 +164,11 @@ public class MainGame{
                 stage.setOnCloseRequest(event -> {
                     event.consume(); // 阻止默认关闭行为
                     try {
-                        if (!ifVisitor && choice==0){
+                        if (!ifVisitor && choice==0 && !ifSave){
                             giveSaveWarning();
+                        } else {
+                            bgm.stop();
+                            stage.close();
                         }
                     } catch (IOException e) {
                         throw new RuntimeException(e);
@@ -161,6 +176,29 @@ public class MainGame{
                 });
             }
         }
+        exitButton.setOnMouseClicked(_ -> {
+            if (!ifVisitor && choice==0 && !ifSave){
+                try {
+                    giveSaveWarning();
+                    Choice.ChooseModel(stage,user);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                bgm.stop();
+                stage.close();
+                Choice.ChooseModel(stage,user);
+            }
+        });
+        Media media;
+        if (choice == 0) {
+            media = new Media(new File("src/main/resources/music/SkinnyLove.mp3").toURI().toString());
+        } else {
+            media = new Media(new File("src/main/resources/music/TheTrunk.mp3").toURI().toString());
+        }
+        bgm = new MediaPlayer(media);
+        bgm.setCycleCount(MediaPlayer.INDEFINITE); // 循环播放
+        bgm.play(); // 播放音乐
         stage.setTitle("2048");
         stage.setScene(gameScene);
         stage.show();
@@ -291,6 +329,7 @@ public class MainGame{
         if (result.isPresent() && result.get() == ButtonType.OK){
             //save the game
             gameData.saveGameData();
+            bgm.stop();
             stage.close();
         }
     }
@@ -373,6 +412,7 @@ public class MainGame{
                     throw new RuntimeException(e);
                 }
             }
+            bgm.stop();
             stage.close();
         }
     }
@@ -421,6 +461,7 @@ public class MainGame{
                     throw new RuntimeException(e);
                 }
             }
+            bgm.stop();
             stage.close();
         }
     }

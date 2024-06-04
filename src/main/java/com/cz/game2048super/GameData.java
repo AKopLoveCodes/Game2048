@@ -59,6 +59,10 @@ public class GameData implements Serializable{
                 if (data.length!=21){
                     continue;
                 }
+                for (int i = 1; i < 20; i++) {
+                    int ifint = Integer.parseInt(data[i]);
+                }
+                boolean ifboolean = Boolean.parseBoolean(data[20]);
                 if (data[0].equals(username)) {
                     newData = data;
                 }
@@ -81,6 +85,10 @@ public class GameData implements Serializable{
                     if (data.length!=21){
                         continue;
                     }
+                    for (int i = 1; i < 20; i++) {
+                        int ifint = Integer.parseInt(data[i]);
+                    }
+                    boolean ifboolean = Boolean.parseBoolean(data[20]);
                     if (data[0].equals(username)) {
                         ifFound = true;
                         break;
