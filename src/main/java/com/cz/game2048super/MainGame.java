@@ -45,6 +45,7 @@ public class MainGame{
     private static Scene gameScene;//游戏场景
     private static int choice;//游戏模式
     private static MediaPlayer bgm;//游戏背景音乐
+    private static boolean ifSoundOpen;//游戏是否开启音乐
 
     public static void LoadGame(Stage theStage,User theUser,int theChoice){
         choice=theChoice;
@@ -55,6 +56,16 @@ public class MainGame{
         initGameData();
         initSettings();
         initGame();
+    }
+
+    public static void initVars(){
+        //initial Variables 初始化变量和游戏数据
+        ifOver = false;
+        counter = 0;
+        Score = 0;
+        ifStart = false;
+        ifSave = false;
+        ifSoundOpen = true;
     }
 
     public static void initSettings(){
@@ -108,10 +119,18 @@ public class MainGame{
         // 使用边距来进一步微调位置
         StackPane.setMargin(startButton, new Insets(0, 0, 50, 0)); // 向上偏移
         borderPane.setBottom(ButtonPane);
-        ImageView exitButton = new ImageView(new Image("file:src/main/resources/pictures/exit.png"));
-        exitButton.setFitWidth(50);
-        exitButton.setFitHeight(50);
-        borderPane.setRight(exitButton);
+        ImageView exitOption = new ImageView(new Image("file:src/main/resources/pictures/exit.png"));
+        exitOption.setFitWidth(60);
+        exitOption.setFitHeight(60);
+        ImageView soundOption = new ImageView(new Image("file:src/main/resources/pictures/SoundOpen.png"));
+        soundOption.setFitWidth(60);
+        soundOption.setFitHeight(60);
+        ImageView informationOption = new ImageView(new Image("file:src/main/resources/pictures/Information.png"));
+        informationOption.setFitWidth(60);
+        informationOption.setFitHeight(60);
+        VBox options = new VBox(15);
+        options.getChildren().addAll(exitOption,soundOption,informationOption);
+        borderPane.setRight(options);
         gameScene = new Scene(borderPane, 1050, 600);
         if (choice==0){
             Image backgroundImage = new Image("file:src/main/resources/pictures/wallhaven-2yxp16.jpg");
@@ -176,7 +195,7 @@ public class MainGame{
                 });
             }
         }
-        exitButton.setOnMouseClicked(_ -> {
+        exitOption.setOnMouseClicked(_ -> {
             if (!ifVisitor && choice==0 && !ifSave){
                 try {
                     giveSaveWarning();
@@ -190,6 +209,36 @@ public class MainGame{
                 Choice.ChooseModel(stage,user);
             }
         });
+        soundOption.setOnMouseClicked(_ -> {
+            if (ifSoundOpen){
+                soundOption.setImage(new Image("file:src/main/resources/pictures/SoundClose.png"));
+                bgm.setVolume(0);
+                ifSoundOpen = false;
+            } else {
+                soundOption.setImage(new Image("file:src/main/resources/pictures/SoundOpen.png"));
+                bgm.setVolume(1);
+                ifSoundOpen = true;
+            }
+        });
+        informationOption.setOnMouseClicked(_ -> {
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("游戏信息");
+            switch (choice){
+                case 0:
+                    alert.setHeaderText("传统模式");
+                    alert.setContentText("在无限长时间内，玩家通过合并数字获取得分，直至得到2048或无法操作为止");
+                    break;
+                case 1:
+                    alert.setHeaderText("障碍模式");
+                    alert.setContentText("玩家会遇到一个无法合并的方块，你必须在剩余区域完成得分");
+                    break;
+                case 2:
+                    alert.setHeaderText("限时模式");
+                    alert.setContentText("玩家在规定时间内完成得分(默认为60s)");
+                    break;
+            }
+            alert.showAndWait();
+        });
         Media media;
         if (choice == 0) {
             media = new Media(new File("src/main/resources/music/SkinnyLove.mp3").toURI().toString());
@@ -202,15 +251,6 @@ public class MainGame{
         stage.setTitle("2048");
         stage.setScene(gameScene);
         stage.show();
-    }
-
-    public static void initVars(){
-        //initial Variables 初始化变量和游戏数据
-        ifOver = false;
-        counter = 0;
-        Score = 0;
-        ifStart = false;
-        ifSave = false;
     }
 
     public static void initGameData(){
