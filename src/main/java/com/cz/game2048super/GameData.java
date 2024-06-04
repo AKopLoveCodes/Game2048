@@ -15,9 +15,11 @@ public class GameData implements Serializable{
     //以下两个变量为记录型变量 应该始终跟随账号
     private int scoreBest;
     private boolean ifHaveWon;
+    private int choice;
 
-    public GameData(String username){
+    public GameData(String username,int choice){
         GameData.username = username;
+        this.choice = choice;
     }
 
     public void loadGameData() throws IOException{
@@ -42,7 +44,7 @@ public class GameData implements Serializable{
         this.ifHaveWon = Boolean.parseBoolean(newData[20]);
     }
 
-    private static String[] getLastData() throws IOException {
+    private String[] getLastData() throws IOException {
         //将用户名下的数据提取出来 找到最新的存档并加载
         List<String> dataList = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader("src/main/resources/assets/data/GameData.txt"))) {
@@ -51,19 +53,20 @@ public class GameData implements Serializable{
                 dataList.add(line);
             }
         }
-        String[] newData = new String[21];
+        String[] newData = new String[22];
         for (String line : dataList) {
             String[] data;
             try {
                 data = line.split(",");
-                if (data.length!=21){
+                if (data.length!=22){
                     continue;
                 }
                 for (int i = 1; i < 20; i++) {
                     int ifint = Integer.parseInt(data[i]);
                 }
                 boolean ifboolean = Boolean.parseBoolean(data[20]);
-                if (data[0].equals(username)) {
+                int ifInt = Integer.parseInt(data[21]);
+                if (data[0].equals(username) && choice==ifInt) {
                     newData = data;
                 }
             } catch (Exception e){
@@ -82,14 +85,15 @@ public class GameData implements Serializable{
                 String[] data;
                 try {
                     data = line.split(",");
-                    if (data.length!=21){
+                    if (data.length!=22){
                         continue;
                     }
                     for (int i = 1; i < 20; i++) {
                         int ifint = Integer.parseInt(data[i]);
                     }
                     boolean ifboolean = Boolean.parseBoolean(data[20]);
-                    if (data[0].equals(username)) {
+                    int ifInt = Integer.parseInt(data[21]);
+                    if (data[0].equals(username) && choice==ifInt) {
                         ifFound = true;
                         break;
                     }
@@ -107,7 +111,7 @@ public class GameData implements Serializable{
         this.ifHaveWon = ifHaveWon;
     }
 
-    public void initGameData(int choice) throws IOException{
+    public void initGameData() throws IOException{
         //将新注册用户或游客的游戏数据初始化
         this.scoreLast = 0;
         this.TimerLast = 0;
@@ -149,7 +153,7 @@ public class GameData implements Serializable{
                     writer.write(this.gridsLast[i][j] + ",");
                 }
             }
-            writer.write(this.ifHaveWon+"");
+            writer.write(this.ifHaveWon+","+this.choice);
             writer.newLine();
         }
         System.out.println("save success");

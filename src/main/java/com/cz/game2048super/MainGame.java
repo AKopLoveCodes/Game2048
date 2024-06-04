@@ -151,7 +151,7 @@ public class MainGame{
             StackPane.setMargin(restartButton, new Insets(0, 0, 50, 0)); // 向上偏移
         });
         restartButton.setOnAction(_ -> restartGame());
-        if (!ifVisitor && choice==0){
+        if (!ifVisitor){
             Button saveButton = new Button("保存");
             saveButton.setMinWidth(80);
             saveButton.setMinHeight(40);
@@ -183,9 +183,10 @@ public class MainGame{
                 stage.setOnCloseRequest(event -> {
                     event.consume(); // 阻止默认关闭行为
                     try {
-                        if (!ifVisitor && choice==0 && !ifSave){
+                        if (!ifVisitor && !ifSave){
                             giveSaveWarning();
                         } else {
+                            timeline.stop();
                             bgm.stop();
                             stage.close();
                         }
@@ -196,10 +197,22 @@ public class MainGame{
             }
         }
         exitOption.setOnMouseClicked(_ -> {
-            if (!ifVisitor && choice==0 && !ifSave){
+            ifOver = true;
+            if (!ifVisitor && !ifSave){
                 try {
-                    giveSaveWarning();
-                    Choice.ChooseModel(stage,user);
+                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                    alert.setTitle("");
+                    alert.setHeaderText("您确定要退出吗");
+                    alert.setContentText("您游玩过程中的数据将会被自动保存");
+                    Optional<ButtonType> result = alert.showAndWait();
+                    if (result.isPresent() && result.get() == ButtonType.OK){
+                        //save the game
+                        gameData.saveGameData();
+                        bgm.stop();
+                        stage.close();
+                        timeline.stop();
+                        Choice.ChooseModel(stage,user);
+                    }
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -254,10 +267,10 @@ public class MainGame{
     }
 
     public static void initGameData(){
-        gameData = new GameData(user.getUsername());
+        gameData = new GameData(user.getUsername(),choice);
         //确认该用户是已经注册且有存档 还是新注册未有存档
         try{
-            if (!ifVisitor && gameData.ifFoundUserData() && choice==0){
+            if (!ifVisitor && gameData.ifFoundUserData()){
                 //非游客登录 且有存档 可以选择以前存档或开始新游戏
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                 alert.setTitle("游戏选项");
@@ -274,7 +287,7 @@ public class MainGame{
                 // 根据用户的选择执行相应的操作
                 if (result.isPresent() && result.get() == startNewGameButton) {
                     // 用户选择开始新游戏，执行相关操作
-                    gameData.initGameData(choice);
+                    gameData.initGameData();
                     gameData.loadGameRecord();
                 } else if (result.isPresent() && result.get() == loadGameButton) {
                     // 用户选择载入存档，执行相关操作
@@ -282,7 +295,7 @@ public class MainGame{
                 }
             } else {
                 //无存档或是游客 直接开始新游戏
-                gameData.initGameData(choice);
+                gameData.initGameData();
             }
         } catch (IOException e){
             e.printStackTrace();
@@ -298,7 +311,6 @@ public class MainGame{
         ScoreLabel.setText("得分："+Score);
         Timer.setText("用时："+counter);
         playGame();
-        borderPane.requestFocus();
     }
 
     public static void playGame(){
@@ -326,6 +338,7 @@ public class MainGame{
         };
         // 将事件过滤器添加到场景中
         gameScene.addEventFilter(KeyEvent.KEY_PRESSED, keyEventHandler);
+        borderPane.requestFocus();
     }
 
     public static void restartGame(){
@@ -341,7 +354,7 @@ public class MainGame{
                 initVars();
                 ifStart = true;
                 try {
-                    gameData.initGameData(choice);
+                    gameData.initGameData();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -351,7 +364,7 @@ public class MainGame{
             initVars();
             ifStart = true;
             try {
-                gameData.initGameData(choice);
+                gameData.initGameData();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -369,6 +382,7 @@ public class MainGame{
         if (result.isPresent() && result.get() == ButtonType.OK){
             //save the game
             gameData.saveGameData();
+            timeline.stop();
             bgm.stop();
             stage.close();
         }
@@ -437,7 +451,7 @@ public class MainGame{
             initVars();
             ifStart = true;
             try {
-                gameData.initGameData(choice);
+                gameData.initGameData();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -446,7 +460,7 @@ public class MainGame{
             //将状态信息归零
             if (!ifVisitor && choice==0){
                 try {
-                    gameData.initGameData(choice);
+                    gameData.initGameData();
                     gameData.saveGameData();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
@@ -486,7 +500,7 @@ public class MainGame{
             initVars();
             ifStart = true;
             try {
-                gameData.initGameData(choice);
+                gameData.initGameData();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -495,7 +509,7 @@ public class MainGame{
             //将状态信息归零
             if (!ifVisitor && choice==0){
                 try {
-                    gameData.initGameData(choice);
+                    gameData.initGameData();
                     gameData.saveGameData();
                 } catch (IOException e) {
                     throw new RuntimeException(e);
