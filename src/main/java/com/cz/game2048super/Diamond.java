@@ -11,7 +11,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 
 public class Diamond {
-    private static StackPane root;
+    private final StackPane root;
 
     public Diamond(){
         //空方块的设定

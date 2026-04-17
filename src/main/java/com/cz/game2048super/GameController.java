@@ -1,17 +1,21 @@
 package com.cz.game2048super;
 
+import java.util.Arrays;
 import java.util.Random;
 
 public class GameController {
     private int[][] gridnums;
+    private boolean lastMoveChanged;
 
     public GameController(){
         gridnums = new int[4][4];
+        lastMoveChanged = false;
     }
 
     public int AStep(int direction){
         //direction 1 UP 2 DOWN 3 LEFT 4 RIGHT
         int addScore=0;
+        int[][] beforeMove = copyGrid();
         //根据方向对gridnums进行操作
         switch (direction){
             case 1:
@@ -143,6 +147,7 @@ public class GameController {
                 }
                 break;
         }
+        lastMoveChanged = !Arrays.deepEquals(beforeMove, gridnums);
         for (int i = 0; i < 4; i++) {
             for (int j = 0; j < 4; j++) {
                 System.out.print(gridnums[i][j]+" ");
@@ -157,16 +162,20 @@ public class GameController {
     }
 
     public boolean isGameOver(){
-        boolean ifGameOver=true;
         for (int i=0;i<4;i++){
             for (int j=0;j<4;j++){
                 if (gridnums[i][j]==0){
-                    ifGameOver=false;
-                    break;
+                    return false;
+                }
+                if (i<3 && gridnums[i][j]==gridnums[i+1][j]){
+                    return false;
+                }
+                if (j<3 && gridnums[i][j]==gridnums[i][j+1]){
+                    return false;
                 }
             }
         }
-        return ifGameOver;
+        return true;
     }
 
     public boolean isWin(){
@@ -205,5 +214,17 @@ public class GameController {
         for (int i = 0; i < 4; i++) {
             System.arraycopy(grids[i], 0, gridnums[i], 0, 4);
         }
+    }
+
+    public boolean wasLastMoveChanged() {
+        return lastMoveChanged;
+    }
+
+    private int[][] copyGrid() {
+        int[][] copy = new int[4][4];
+        for (int i = 0; i < 4; i++) {
+            System.arraycopy(gridnums[i], 0, copy[i], 0, 4);
+        }
+        return copy;
     }
 }
