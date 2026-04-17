@@ -16,7 +16,7 @@ import java.util.Optional;
 public class Choice {
     public static void ChooseModel(Stage stage,User user){
         VBox root = new VBox(30);
-        Image image = new Image("file:src/main/resources/pictures/wallhaven-kx53om.jpg");
+        Image image = new Image(ResourceLoader.resourceUrl("/pictures/wallhaven-kx53om.jpg").toExternalForm());
         root.setBackground(new Background(new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(100, 100, true, true, false, true))));
         root.setAlignment(Pos.TOP_CENTER);
         Font font = new Font("华文中宋",40);
@@ -34,15 +34,12 @@ public class Choice {
         stage.setScene(scene);
         stage.show();
         labelSingle.setOnMouseClicked(_ -> {
-            stage.close();
             MainGame.LoadGame(stage,user,0);}
         );
         labelBlock.setOnMouseClicked(_ -> {
-            stage.close();
             MainGame.LoadGame(stage,user,1);
         });
         labelTime.setOnMouseClicked(_ -> {
-            stage.close();
             MainGame.LoadGame(stage,user,2);
         });
         stage.setOnCloseRequest(e -> {

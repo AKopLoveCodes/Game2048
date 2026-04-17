@@ -12,7 +12,7 @@ public class Main extends Application {
     @Override
     public void start(Stage stage){
         //设置图标
-        Image icon = new Image("file:src/main/resources/assets.icon/Icon.png");
+        Image icon = new Image(ResourceLoader.resourceUrl("/assets.icon/Icon.png").toExternalForm());
         stage.getIcons().add(icon);
         //进入登录界面
         LoginSystem.LoadLogin(stage);
