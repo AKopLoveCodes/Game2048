@@ -76,7 +76,7 @@ public class MainGame {
             boardAnimator.play(moveResult, () -> {
                 boardBusy = false;
                 if (shouldTriggerGameOverAfterInput(code, false, model)) {
-                    gameOver();
+                    presentGameOver(true);
                 } else {
                     requestGameFocus();
                 }
@@ -161,7 +161,7 @@ public class MainGame {
 
         applyBackground();
 
-        gameScene = new Scene(borderPane, 1050, 600);
+        gameScene = new Scene(borderPane, 1200, 900);
         gameScene.addEventFilter(KeyEvent.KEY_PRESSED, keyEventHandler);
 
         bgm = new MediaPlayer(selectBackgroundMusic());
@@ -367,11 +367,31 @@ public class MainGame {
         return started && !over && (controller.isWin() || controller.isGameOver());
     }
 
+    private static boolean shouldDeferEndDialog(boolean triggeredFromAnimationCallback) {
+        return triggeredFromAnimationCallback;
+    }
+
     private static boolean isMoveKey(KeyCode code) {
         return switch (code) {
             case UP, W, DOWN, S, LEFT, A, RIGHT, D -> true;
             default -> false;
         };
+    }
+
+    private void presentGameWin(boolean triggeredFromAnimationCallback) {
+        dispatchEndDialog(this::gameWin, triggeredFromAnimationCallback);
+    }
+
+    private void presentGameOver(boolean triggeredFromAnimationCallback) {
+        dispatchEndDialog(this::gameOver, triggeredFromAnimationCallback);
+    }
+
+    private void dispatchEndDialog(Runnable dialogAction, boolean triggeredFromAnimationCallback) {
+        if (shouldDeferEndDialog(triggeredFromAnimationCallback)) {
+            Platform.runLater(dialogAction);
+            return;
+        }
+        dialogAction.run();
     }
 
     private void restartGame() {
@@ -504,12 +524,12 @@ public class MainGame {
         gameData.updateGameData(score, counter, model.getGridnums());
 
         if (moveResult.win()) {
-            gameWin();
+            presentGameWin(true);
             return;
         }
 
         if (moveResult.gameOver()) {
-            gameOver();
+            presentGameOver(true);
             return;
         }
 

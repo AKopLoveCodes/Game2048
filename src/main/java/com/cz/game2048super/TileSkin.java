@@ -28,31 +28,31 @@ public record TileSkin(Paint fill, Paint highlight, Color textColor, double font
                     52
             );
             case 4 -> new TileSkin(
-                    gradient("#f7d89f", "#e9b35b"),
-                    Color.web("#fff1ca", 0.55),
+                    gradient("#fff58a", "#ebe836"),
+                    Color.web("#fff6bf", 0.9),
                     Color.web("#5a4023"),
                     52
             );
             case 8 -> new TileSkin(
-                    gradient("#f5b487", "#e28a58"),
+                    gradient("#f5b487", "#e47432"),
                     Color.web("#ffd8bd", 0.5),
                     Color.web("#fff9f4"),
                     50
             );
             case 16 -> new TileSkin(
-                    gradient("#ee8d74", "#db6058"),
+                    gradient("#ee8d74", "#e1180a"),
                     Color.web("#ffc1b6", 0.45),
                     Color.web("#fff8f7"),
                     47
             );
             case 32 -> new TileSkin(
-                    gradient("#da698d", "#b54b86"),
+                    gradient("#da698d", "#cf2b85"),
                     Color.web("#ffc1d8", 0.4),
                     Color.web("#fff7fb"),
                     47
             );
             case 64 -> new TileSkin(
-                    gradient("#b76fd5", "#8a53c7"),
+                    gradient("#b76fd5", "#8141ca"),
                     Color.web("#ead6ff", 0.38),
                     Color.web("#fff8ff"),
                     47

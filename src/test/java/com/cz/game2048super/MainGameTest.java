@@ -80,6 +80,16 @@ class MainGameTest {
         assertFalse(shouldPromptEndDialogWhenBoardReady(false, false, controller));
     }
 
+    @Test
+    void terminalDialogsFromAnimationCallbacksShouldBeDeferred() {
+        assertTrue(shouldDeferEndDialog(true));
+    }
+
+    @Test
+    void terminalDialogsOutsideAnimationCallbacksNeedNotBeDeferred() {
+        assertFalse(shouldDeferEndDialog(false));
+    }
+
     private boolean shouldTriggerGameOverAfterInput(KeyCode keyCode, boolean moveChanged, GameController controller) {
         try {
             Method method = MainGame.class.getDeclaredMethod(
@@ -111,6 +121,21 @@ class MainGameTest {
             throw new AssertionError("MainGame should expose readiness end-state logic for terminal boards", e);
         } catch (IllegalAccessException | InvocationTargetException e) {
             throw new AssertionError("Unable to invoke MainGame readiness end-state logic", e);
+        }
+    }
+
+    private boolean shouldDeferEndDialog(boolean triggeredFromAnimationCallback) {
+        try {
+            Method method = MainGame.class.getDeclaredMethod(
+                    "shouldDeferEndDialog",
+                    boolean.class
+            );
+            method.setAccessible(true);
+            return (boolean) method.invoke(null, triggeredFromAnimationCallback);
+        } catch (NoSuchMethodException e) {
+            throw new AssertionError("MainGame should expose end-dialog dispatch logic for animation callbacks", e);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new AssertionError("Unable to invoke MainGame end-dialog dispatch logic", e);
         }
     }
 }

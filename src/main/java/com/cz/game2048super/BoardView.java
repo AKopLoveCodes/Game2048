@@ -55,20 +55,20 @@ public class BoardView extends StackPane {
                 1,
                 true,
                 CycleMethod.NO_CYCLE,
-                new Stop(0.0, Color.web("#7a6453")),
-                new Stop(0.5, Color.web("#6b5648")),
-                new Stop(1.0, Color.web("#4f4037"))
+                new Stop(0.0, Color.web("#7a6453", 0.70)),
+                new Stop(0.5, Color.web("#6b5648", 0.70)),
+                new Stop(1.0, Color.web("#4f4037", 0.70))
         ));
 
         DropShadow outer = new DropShadow();
         outer.setRadius(32);
         outer.setOffsetY(18);
-        outer.setColor(Color.web("#140d09", 0.28));
+        outer.setColor(Color.web("#140d09", 0.16));
 
         InnerShadow inner = new InnerShadow();
         inner.setRadius(16);
         inner.setOffsetY(-8);
-        inner.setColor(Color.web("#fff6ea", 0.18));
+        inner.setColor(Color.web("#fff6ea", 0.10));
         outer.setInput(inner);
         boardShell.setEffect(outer);
 
@@ -163,12 +163,12 @@ public class BoardView extends StackPane {
                 Rectangle slot = new Rectangle(CELL_SIZE, CELL_SIZE);
                 slot.setArcWidth(CELL_SIZE * 0.24);
                 slot.setArcHeight(CELL_SIZE * 0.24);
-                slot.setFill(Color.web("#d4c1af", 0.42));
+                slot.setFill(Color.web("#d4c1af", 0.25));
 
                 InnerShadow slotDepth = new InnerShadow();
                 slotDepth.setRadius(10);
                 slotDepth.setOffsetY(3);
-                slotDepth.setColor(Color.web("#3b2f28", 0.18));
+                slotDepth.setColor(Color.web("#3b2f28", 0.12));
                 slot.setEffect(slotDepth);
 
                 Point2D point = pointFor(new BoardPosition(row, col));
