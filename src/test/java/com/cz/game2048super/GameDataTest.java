@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -39,11 +40,28 @@ class GameDataTest {
     }
 
     @Test
-    void applicationDataDirectoryDefaultsToUserHomeSubdirectory() throws IOException {
+    void nonWindowsDefaultsToUserHomeSubdirectory() throws IOException {
         Path fakeHome = Files.createTempDirectory("game2048-home");
-        System.setProperty("user.home", fakeHome.toString());
 
-        assertEquals(fakeHome.resolve(".game2048super").toAbsolutePath().normalize(), AppPaths.applicationDataDirectory());
+        assertEquals(
+                fakeHome.resolve(".game2048super").toAbsolutePath().normalize(),
+                AppPaths.resolveApplicationDataDirectory(null, "Linux", Map.of(), fakeHome.toString())
+        );
+    }
+
+    @Test
+    void windowsUsesRoamingAppDataDirectoryWhenAvailable() {
+        Path expected = Path.of("C:/Users/test/AppData/Roaming/Game2048super").toAbsolutePath().normalize();
+
+        assertEquals(
+                expected,
+                AppPaths.resolveApplicationDataDirectory(
+                        null,
+                        "Windows 11",
+                        Map.of("APPDATA", "C:/Users/test/AppData/Roaming"),
+                        "C:/Users/test"
+                )
+        );
     }
 
     @Test

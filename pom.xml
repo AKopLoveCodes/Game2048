@@ -13,6 +13,11 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <junit.version>5.10.0</junit.version>
         <javafx.version>21.0.2</javafx.version>
+        <main.module>com.cz.game2048super</main.module>
+        <main.class>com.cz.game2048super.Main</main.class>
+        <windows.installer.version>1.0.0</windows.installer.version>
+        <windows.installer.icon>${project.basedir}/src/main/resources/assets.icon/Icon.ico</windows.installer.icon>
+        <windows.installer.upgradeUuid>f670ff44-0637-4cb2-a5f3-2d4f5f7b3920</windows.installer.upgradeUuid>
     </properties>
 
     <dependencies>
@@ -53,6 +58,7 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
+                    <fork>true</fork>
                     <release>22</release>
                     <compilerArgs>
                         <arg>--enable-preview</arg>
@@ -89,4 +95,72 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <profile>
+            <id>windows-installer</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-dependency-plugin</artifactId>
+                        <version>3.8.1</version>
+                        <executions>
+                            <execution>
+                                <id>copy-jpackage-dependencies</id>
+                                <phase>prepare-package</phase>
+                                <goals>
+                                    <goal>copy-dependencies</goal>
+                                </goals>
+                                <configuration>
+                                    <includeScope>runtime</includeScope>
+                                    <outputDirectory>${project.build.directory}/jpackage-modules</outputDirectory>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>3.5.0</version>
+                        <executions>
+                            <execution>
+                                <id>package-windows-exe</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${java.home}/bin/jpackage.exe</executable>
+                                    <arguments>
+                                        <argument>--type</argument>
+                                        <argument>exe</argument>
+                                        <argument>--dest</argument>
+                                        <argument>${project.build.directory}/installer</argument>
+                                        <argument>--name</argument>
+                                        <argument>${project.artifactId}</argument>
+                                        <argument>--app-version</argument>
+                                        <argument>${windows.installer.version}</argument>
+                                        <argument>--module-path</argument>
+                                        <argument>${project.build.directory}/${project.build.finalName}.jar;${project.build.directory}/jpackage-modules</argument>
+                                        <argument>--module</argument>
+                                        <argument>${main.module}/${main.class}</argument>
+                                        <argument>--java-options</argument>
+                                        <argument>--enable-preview</argument>
+                                        <argument>--icon</argument>
+                                        <argument>${windows.installer.icon}</argument>
+                                        <argument>--win-shortcut</argument>
+                                        <argument>--win-menu</argument>
+                                        <argument>--win-dir-chooser</argument>
+                                        <argument>--win-upgrade-uuid</argument>
+                                        <argument>${windows.installer.upgradeUuid}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>

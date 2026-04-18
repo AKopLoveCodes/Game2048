@@ -9,6 +9,7 @@ import java.util.Objects;
 public final class AppPaths {
     public static final String DATA_DIRECTORY_PROPERTY = "game2048super.dataDir";
     private static final String DEFAULT_DATA_DIRECTORY_NAME = ".game2048super";
+    private static final String WINDOWS_DATA_DIRECTORY_NAME = "Game2048super";
     private static final String GAME_DATA_FILE_NAME = "GameData.txt";
 
     private AppPaths() {
@@ -16,17 +17,9 @@ public final class AppPaths {
 
     public static Path applicationDataDirectory() {
         String overrideDirectory = System.getProperty(DATA_DIRECTORY_PROPERTY);
-        Path resolvedDirectory;
-        if (overrideDirectory != null && !overrideDirectory.isBlank()) {
-            resolvedDirectory = Paths.get(overrideDirectory);
-        } else {
-            String userHome = System.getProperty("user.home");
-            if (userHome == null || userHome.isBlank()) {
-                throw new IllegalStateException("user.home is not configured");
-            }
-            resolvedDirectory = Paths.get(userHome, DEFAULT_DATA_DIRECTORY_NAME);
-        }
-        return resolvedDirectory.toAbsolutePath().normalize();
+        String osName = System.getProperty("os.name");
+        String userHome = System.getProperty("user.home");
+        return resolveApplicationDataDirectory(overrideDirectory, osName, System.getenv(), userHome);
     }
 
     public static Path applicationDataFile(String fileName) {
@@ -57,5 +50,34 @@ public final class AppPaths {
             Files.createFile(file);
         }
         return file;
+    }
+
+    static Path resolveApplicationDataDirectory(
+            String overrideDirectory,
+            String osName,
+            java.util.Map<String, String> environment,
+            String userHome
+    ) {
+        Path resolvedDirectory;
+        if (overrideDirectory != null && !overrideDirectory.isBlank()) {
+            resolvedDirectory = Paths.get(overrideDirectory);
+        } else if (osName != null && osName.toLowerCase().contains("win")) {
+            String appData = environment.get("APPDATA");
+            if (appData != null && !appData.isBlank()) {
+                resolvedDirectory = Paths.get(appData, WINDOWS_DATA_DIRECTORY_NAME);
+            } else {
+                resolvedDirectory = resolveUserHomeFallback(userHome);
+            }
+        } else {
+            resolvedDirectory = resolveUserHomeFallback(userHome);
+        }
+        return resolvedDirectory.toAbsolutePath().normalize();
+    }
+
+    private static Path resolveUserHomeFallback(String userHome) {
+        if (userHome == null || userHome.isBlank()) {
+            throw new IllegalStateException("user.home is not configured");
+        }
+        return Paths.get(userHome, DEFAULT_DATA_DIRECTORY_NAME);
     }
 }
