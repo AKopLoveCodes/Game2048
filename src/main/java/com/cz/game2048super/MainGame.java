@@ -21,7 +21,6 @@ import javafx.scene.layout.BackgroundPosition;
 import javafx.scene.layout.BackgroundRepeat;
 import javafx.scene.layout.BackgroundSize;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
@@ -32,7 +31,6 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.io.IOException;
-import java.util.Objects;
 import java.util.Optional;
 
 public class MainGame {
@@ -41,7 +39,8 @@ public class MainGame {
     private final boolean visitor;
     private final int choice;
 
-    private GridPane grids;
+    private BoardView boardView;
+    private BoardAnimator boardAnimator;
     private int counter;
     private Timeline timeline;
     private int score;
@@ -59,23 +58,34 @@ public class MainGame {
     private StackPane buttonPane;
     private Button startButton;
     private Button restartButton;
+    private boolean boardBusy;
 
     private final EventHandler<KeyEvent> keyEventHandler = event -> {
-        if (!started || over) {
+        if (!started || over || boardBusy) {
             return;
         }
 
         KeyCode code = event.getCode();
-        boolean moveChanged = handleMove(code);
-        if (!moveChanged) {
-            if (shouldTriggerGameOverAfterInput(code, false, model)) {
-                updateGridsByNums(model.getGridnums());
-                gameOver();
-            }
+        MoveResult moveResult = handleMove(code);
+        if (moveResult == null) {
             return;
         }
 
-        afterSuccessfulMove();
+        boardBusy = true;
+        if (!moveResult.moveChanged()) {
+            boardAnimator.play(moveResult, () -> {
+                boardBusy = false;
+                if (shouldTriggerGameOverAfterInput(code, false, model)) {
+                    gameOver();
+                } else {
+                    requestGameFocus();
+                }
+            });
+            return;
+        }
+
+        score += moveResult.scoreDelta();
+        boardAnimator.play(moveResult, () -> finishMove(moveResult));
     };
 
     private MainGame(Stage stage, User user, int choice) {
@@ -103,6 +113,7 @@ public class MainGame {
         started = false;
         saved = false;
         soundOpen = true;
+        boardBusy = false;
     }
 
     private void initSettings() {
@@ -125,18 +136,22 @@ public class MainGame {
                     timeline.stop();
                     Platform.runLater(this::gameOver);
                 }
+                if (model.isGameOver()) {
+                    over = true;
+                    timeline.stop();
+                    Platform.runLater(this::gameOver);
+                }
             }
             gameData.updateTimer(counter);
             timerLabel.setText("用时: " + counter);
         }));
         timeline.setCycleCount(Timeline.INDEFINITE);
 
-        grids = new GridPane(10, 10);
-        grids.setPrefSize(600, 600);
-        grids.setAlignment(Pos.CENTER);
+        boardView = new BoardView();
+        boardAnimator = new BoardAnimator(boardView);
 
         borderPane = new BorderPane();
-        borderPane.setCenter(grids);
+        borderPane.setCenter(boardView);
         borderPane.setLeft(buildInfoPane());
         borderPane.setBottom(buildBottomButtons());
         borderPane.setRight(buildOptionsPane());
@@ -186,7 +201,15 @@ public class MainGame {
             buttonPane.getChildren().setAll(restartButton);
             StackPane.setAlignment(restartButton, Pos.CENTER);
             StackPane.setMargin(restartButton, new Insets(0, 0, 50, 0));
-            requestGameFocus();
+            if (shouldPromptEndDialogWhenBoardReady(started, over, model)) {
+                if (model.isWin()) {
+                    gameWin();
+                } else {
+                    gameOver();
+                }
+            } else {
+                requestGameFocus();
+            }
         });
         restartButton.setOnAction(_ -> restartGame());
         return buttonPane;
@@ -203,6 +226,7 @@ public class MainGame {
 
         saveButton.setOnAction(_ -> {
             try {
+                stopBoardAnimation();
                 gameData.saveGameData();
                 saved = true;
                 started = false;
@@ -306,27 +330,41 @@ public class MainGame {
         model.setGridnums(gameData.getGridsLast());
         score = gameData.getScoreLast();
         counter = gameData.getTimerLast();
-        updateGridsByNums(model.getGridnums());
+        boardBusy = false;
+        boardView.syncToState(model.getBoardState());
         scoreLabel.setText("得分: " + score);
         timerLabel.setText("用时: " + counter);
-        requestGameFocus();
+        if (shouldPromptEndDialogWhenBoardReady(started, over, model)) {
+            if (model.isWin()) {
+                gameWin();
+            } else {
+                gameOver();
+            }
+        } else {
+            requestGameFocus();
+        }
     }
 
-    private boolean handleMove(KeyCode code) {
-        switch (code) {
-            case UP, W -> score += model.AStep(1);
-            case DOWN, S -> score += model.AStep(2);
-            case LEFT, A -> score += model.AStep(3);
-            case RIGHT, D -> score += model.AStep(4);
-            default -> {
-                return false;
-            }
+    private MoveResult handleMove(KeyCode code) {
+        MoveDirection direction = switch (code) {
+            case UP, W -> MoveDirection.UP;
+            case DOWN, S -> MoveDirection.DOWN;
+            case LEFT, A -> MoveDirection.LEFT;
+            case RIGHT, D -> MoveDirection.RIGHT;
+            default -> null;
+        };
+        if (direction == null) {
+            return null;
         }
-        return model.wasLastMoveChanged();
+        return model.move(direction, true);
     }
 
     private static boolean shouldTriggerGameOverAfterInput(KeyCode code, boolean moveChanged, GameController controller) {
         return isMoveKey(code) && !moveChanged && controller.isGameOver();
+    }
+
+    private static boolean shouldPromptEndDialogWhenBoardReady(boolean started, boolean over, GameController controller) {
+        return started && !over && (controller.isWin() || controller.isGameOver());
     }
 
     private static boolean isMoveKey(KeyCode code) {
@@ -337,6 +375,7 @@ public class MainGame {
     }
 
     private void restartGame() {
+        stopBoardAnimation();
         if (!visitor && choice == 0) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
             alert.setTitle("");
@@ -370,21 +409,6 @@ public class MainGame {
             shutdown();
         } else {
             requestGameFocus();
-        }
-    }
-
-    private void changeGrid(int x, int y, int index) {
-        grids.getChildren().removeIf(node ->
-                Objects.equals(GridPane.getColumnIndex(node), x)
-                        && Objects.equals(GridPane.getRowIndex(node), y));
-        grids.add(new Diamond(index).getRoot(), x, y);
-    }
-
-    private void updateGridsByNums(int[][] nums) {
-        for (int i = 0; i < 4; i++) {
-            for (int j = 0; j < 4; j++) {
-                changeGrid(j, i, nums[i][j]);
-            }
         }
     }
 
@@ -463,6 +487,7 @@ public class MainGame {
     }
 
     private void restartAfterEnd() {
+        stopBoardAnimation();
         initVars();
         started = true;
         timeline.playFromStart();
@@ -473,30 +498,27 @@ public class MainGame {
         StackPane.setMargin(restartButton, new Insets(0, 0, 50, 0));
     }
 
-    private void afterSuccessfulMove() {
+    private void finishMove(MoveResult moveResult) {
+        boardBusy = false;
         scoreLabel.setText("得分: " + score);
         gameData.updateGameData(score, counter, model.getGridnums());
 
-        if (model.isWin()) {
-            updateGridsByNums(model.getGridnums());
+        if (moveResult.win()) {
             gameWin();
             return;
         }
 
-        if (model.isGameOver()) {
-            updateGridsByNums(model.getGridnums());
+        if (moveResult.gameOver()) {
             gameOver();
             return;
         }
 
-        model.createNewGrid();
-        updateGridsByNums(model.getGridnums());
-        gameData.updateGameData(score, counter, model.getGridnums());
         saved = false;
         requestGameFocus();
     }
 
     private void exitToChoice() {
+        stopBoardAnimation();
         over = true;
         if (!visitor && !saved) {
             try {
@@ -564,7 +586,15 @@ public class MainGame {
         }
     }
 
+    private void stopBoardAnimation() {
+        boardBusy = false;
+        if (boardAnimator != null && model != null) {
+            boardAnimator.stop(model.getBoardState());
+        }
+    }
+
     private void shutdown() {
+        stopBoardAnimation();
         if (timeline != null) {
             timeline.stop();
         }
