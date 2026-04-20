@@ -55,20 +55,21 @@ public class BoardAnimator {
         }
         Animation spawnPhase = createSpawnPhase(plan.spawnEvent(), plan.spawnDuration());
         if (spawnPhase != null) {
+            spawnPhase.setDelay(javafx.util.Duration.millis(plan.slideDuration().toMillis() / 2.0)); // 重叠：在滑动一半时开始生成
             phases.add(spawnPhase);
         }
 
-        SequentialTransition sequence = new SequentialTransition();
-        sequence.getChildren().addAll(phases);
-        activeAnimation = sequence;
-        sequence.setOnFinished(_ -> {
+        ParallelTransition composite = new ParallelTransition();
+        composite.getChildren().addAll(phases);
+        activeAnimation = composite;
+        composite.setOnFinished(_ -> {
             activeAnimation = null;
             boardView.syncToState(result.boardAfter());
             if (onFinished != null) {
                 onFinished.run();
             }
         });
-        sequence.play();
+        composite.play();
     }
 
     public void stop(BoardState fallbackState) {
@@ -107,7 +108,7 @@ public class BoardAnimator {
             TranslateTransition transition = new TranslateTransition(toFx(duration), tileView);
             transition.setByX(to.getX() - from.getX());
             transition.setByY(to.getY() - from.getY());
-            transition.setInterpolator(Interpolator.SPLINE(0.22, 0.84, 0.24, 1.0));
+            transition.setInterpolator(Interpolator.EASE_OUT);
             slidePhase.getChildren().add(transition);
         }
 
@@ -138,7 +139,7 @@ public class BoardAnimator {
             pulse.setToY(tokens.mergeScale());
             pulse.setCycleCount(2);
             pulse.setAutoReverse(true);
-            pulse.setInterpolator(Interpolator.SPLINE(0.18, 0.88, 0.18, 1.0));
+            pulse.setInterpolator(Interpolator.EASE_BOTH);
 
             ParallelTransition mergeTransition = new ParallelTransition();
             mergeTransition.getChildren().add(pulse);

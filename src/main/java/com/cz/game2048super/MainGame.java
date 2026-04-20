@@ -59,15 +59,32 @@ public class MainGame {
     private Button startButton;
     private Button restartButton;
     private boolean boardBusy;
+    private java.util.Queue<KeyCode> inputBuffer = new java.util.LinkedList<>();
 
     private final EventHandler<KeyEvent> keyEventHandler = event -> {
-        if (!started || over || boardBusy) {
+        if (!started || over) {
             return;
         }
 
         KeyCode code = event.getCode();
+        if (!isMoveKey(code)) {
+            return;
+        }
+
+        if (boardBusy) {
+            if (inputBuffer.size() < 2) { // 限制缓冲大小，防止输入过多导致失控
+                inputBuffer.offer(code);
+            }
+            return;
+        }
+
+        processInput(code);
+    };
+
+    private void processInput(KeyCode code) {
         MoveResult moveResult = handleMove(code);
         if (moveResult == null) {
+            checkNextBufferedInput();
             return;
         }
 
@@ -78,7 +95,7 @@ public class MainGame {
                 if (shouldTriggerGameOverAfterInput(code, false, model)) {
                     presentGameOver(true);
                 } else {
-                    requestGameFocus();
+                    checkNextBufferedInput();
                 }
             });
             return;
@@ -86,7 +103,16 @@ public class MainGame {
 
         score += moveResult.scoreDelta();
         boardAnimator.play(moveResult, () -> finishMove(moveResult));
-    };
+    }
+
+    private void checkNextBufferedInput() {
+        if (!inputBuffer.isEmpty()) {
+            KeyCode nextCode = inputBuffer.poll();
+            processInput(nextCode);
+        } else {
+            requestGameFocus();
+        }
+    }
 
     private MainGame(Stage stage, User user, int choice) {
         this.stage = stage;
@@ -114,6 +140,7 @@ public class MainGame {
         saved = false;
         soundOpen = true;
         boardBusy = false;
+        inputBuffer.clear();
     }
 
     private void initSettings() {
@@ -534,7 +561,7 @@ public class MainGame {
         }
 
         saved = false;
-        requestGameFocus();
+        checkNextBufferedInput();
     }
 
     private void exitToChoice() {
