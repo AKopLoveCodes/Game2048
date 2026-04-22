@@ -17,6 +17,14 @@ public final class ResourceLoader {
         return resourceUrl;
     }
 
+    /**
+     * Returns the external-form URL of a classpath CSS resource,
+     * suitable for {@code Scene.getStylesheets().add(...)}.
+     */
+    public static String stylesheet(String resourcePath) {
+        return resourceUrl(resourcePath).toExternalForm();
+    }
+
     public static InputStream open(String resourcePath) {
         String normalizedPath = normalizeResourcePath(resourcePath);
         InputStream inputStream = ResourceLoader.class.getResourceAsStream(normalizedPath);

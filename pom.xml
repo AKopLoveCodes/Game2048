@@ -15,7 +15,7 @@
         <javafx.version>21.0.2</javafx.version>
         <main.module>com.cz.game2048super</main.module>
         <main.class>com.cz.game2048super.Main</main.class>
-        <windows.installer.version>1.0.3</windows.installer.version>
+        <windows.installer.version>1.0.4</windows.installer.version>
         <windows.installer.icon>${project.basedir}/src/main/resources/assets.icon/Icon.ico</windows.installer.icon>
         <windows.installer.upgradeUuid>f670ff44-0637-4cb2-a5f3-2d4f5f7b3920</windows.installer.upgradeUuid>
     </properties>

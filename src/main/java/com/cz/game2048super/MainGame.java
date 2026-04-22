@@ -25,8 +25,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
-import javafx.scene.paint.Color;
-import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -148,12 +146,9 @@ public class MainGame {
 
         model = new GameController();
         timerLabel = new Label("用时: 0");
-        timerLabel.setTextFill(Color.WHITE);
+        timerLabel.getStyleClass().add("game-info-label");
         scoreLabel = new Label("得分: 0");
-        scoreLabel.setTextFill(Color.WHITE);
-        Font labelFont = new Font("华文中宋", 35);
-        timerLabel.setFont(labelFont);
-        scoreLabel.setFont(labelFont);
+        scoreLabel.getStyleClass().add("game-info-label");
 
         timeline = new Timeline(new KeyFrame(Duration.seconds(1), _ -> {
             if (!over && started) {
@@ -189,6 +184,7 @@ public class MainGame {
         applyBackground();
 
         gameScene = new Scene(borderPane, 1200, 900);
+        gameScene.getStylesheets().add(ResourceLoader.stylesheet("/css/style.css"));
         gameScene.addEventFilter(KeyEvent.KEY_PRESSED, keyEventHandler);
 
         bgm = new MediaPlayer(selectBackgroundMusic());
@@ -198,25 +194,26 @@ public class MainGame {
         stage.setTitle("2048");
         stage.setScene(gameScene);
         stage.show();
+        stage.centerOnScreen();
+        UIAnimations.addFadeIn(borderPane);
         requestGameFocus();
     }
 
     private VBox buildInfoPane() {
-        VBox infoPane = new VBox(15);
+        VBox infoPane = new VBox();
+        infoPane.getStyleClass().add("game-info-pane");
         infoPane.getChildren().addAll(timerLabel, scoreLabel);
-        infoPane.setAlignment(Pos.TOP_CENTER);
         VBox.setMargin(timerLabel, new Insets(40));
-        infoPane.setPrefWidth(300);
         return infoPane;
     }
 
     private StackPane buildBottomButtons() {
         startButton = new Button("开始游戏");
-        startButton.setMinWidth(100);
-        startButton.setMinHeight(50);
+        startButton.getStyleClass().add("game-start-button");
         restartButton = new Button("重新开始");
-        restartButton.setMinWidth(100);
-        restartButton.setMinHeight(50);
+        restartButton.getStyleClass().add("game-restart-button");
+        UIAnimations.addHoverScale(startButton);
+        UIAnimations.addHoverScale(restartButton);
 
         buttonPane = new StackPane(startButton);
         StackPane.setAlignment(startButton, Pos.CENTER);
@@ -244,8 +241,8 @@ public class MainGame {
 
     private StackPane buildSavePane() {
         Button saveButton = new Button("保存");
-        saveButton.setMinWidth(80);
-        saveButton.setMinHeight(40);
+        saveButton.getStyleClass().add("game-save-button");
+        UIAnimations.addHoverScale(saveButton);
 
         StackPane saveButtonPane = new StackPane(saveButton);
         StackPane.setAlignment(saveButtonPane, Pos.CENTER);
@@ -258,6 +255,7 @@ public class MainGame {
                 saved = true;
                 started = false;
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                UIUtils.styleDialog(alert);
                 alert.setTitle("保存成功");
                 alert.setHeaderText("游戏存档已成功保存");
                 alert.setContentText("");
@@ -295,7 +293,12 @@ public class MainGame {
         soundOption.setOnMouseClicked(_ -> toggleSound(soundOption));
         informationOption.setOnMouseClicked(_ -> showModeInformation());
 
-        VBox options = new VBox(15);
+        UIAnimations.addHoverScale(exitOption);
+        UIAnimations.addHoverScale(soundOption);
+        UIAnimations.addHoverScale(informationOption);
+
+        VBox options = new VBox();
+        options.getStyleClass().add("game-options-pane");
         options.getChildren().addAll(exitOption, soundOption, informationOption);
         return options;
     }
@@ -332,6 +335,7 @@ public class MainGame {
         try {
             if (!visitor && gameData.ifFoundUserData()) {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                UIUtils.styleDialog(alert);
                 alert.setTitle("游戏选项");
                 alert.setHeaderText(user.getUsername() + "，检测到您已有存档，请选择要执行的操作：");
                 alert.setContentText("注意：开始新游戏会覆盖原有存档，但不会影响您的记录");
@@ -425,6 +429,7 @@ public class MainGame {
         stopBoardAnimation();
         if (!visitor && choice == 0) {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            UIUtils.styleDialog(alert);
             alert.setTitle("");
             alert.setHeaderText("您确定要重新开始吗？");
             alert.setContentText("您游玩过程中的数据可能尚未保存");
@@ -447,6 +452,7 @@ public class MainGame {
 
     private void giveSaveWarning() throws IOException {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        UIUtils.styleDialog(alert);
         alert.setTitle("");
         alert.setHeaderText("您确定要退出吗");
         alert.setContentText("您游玩过程中的数据将会被自动保存");
@@ -455,7 +461,7 @@ public class MainGame {
             gameData.saveGameData();
             shutdown();
         } else {
-            requestGameFocus();
+            shutdown();
         }
     }
 
@@ -472,6 +478,7 @@ public class MainGame {
 
         gameData.setIfHaveWon(true);
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        UIUtils.styleDialog(alert);
         alert.setTitle("游戏通关");
         String text = "恭喜你成功通关了此模式:\n您的本次得分为：" + score
                 + "\n您的本次用时为：" + counter + "秒\n您的历史最高得分为：" + gameData.getScoreBest() + "\n";
@@ -508,6 +515,7 @@ public class MainGame {
         }
 
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        UIUtils.styleDialog(alert);
         alert.setTitle("游戏结算");
         String text = "本次游戏结束了：\n您的本次得分为：" + score
                 + "\n您的本次用时为：" + counter + "秒\n您的历史最高得分为：" + gameData.getScoreBest() + "\n";
@@ -570,6 +578,7 @@ public class MainGame {
         if (!visitor && !saved) {
             try {
                 Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+                UIUtils.styleDialog(alert);
                 alert.setTitle("");
                 alert.setHeaderText("您确定要退出吗");
                 alert.setContentText("您游玩过程中的数据将会被自动保存");
@@ -579,8 +588,8 @@ public class MainGame {
                     shutdown();
                     Choice.ChooseModel(stage, user);
                 } else {
-                    over = false;
-                    requestGameFocus();
+                    shutdown();
+                    Choice.ChooseModel(stage, user);
                 }
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -607,6 +616,7 @@ public class MainGame {
 
     private void showModeInformation() {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        UIUtils.styleDialog(alert);
         alert.setTitle("游戏信息");
         switch (choice) {
             case 0 -> {

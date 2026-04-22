@@ -1,6 +1,5 @@
 package com.cz.game2048super;
 
-import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.Image;
@@ -29,24 +28,38 @@ public class LoginSystem {
 
         StackPane stackPane = new StackPane();
         GridPane gridPane = new GridPane();
-        gridPane.setAlignment(Pos.CENTER);
-        gridPane.setHgap(15);
-        gridPane.setVgap(20);
+        gridPane.getStyleClass().addAll("login-grid", "form-card");
+        gridPane.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
 
-        Label userNameLabel = new Label("用户");
+        Label titleLabel = new Label("2048 Super");
+        titleLabel.getStyleClass().add("form-title");
+        GridPane.setHalignment(titleLabel, javafx.geometry.HPos.CENTER);
+
+        Label userNameLabel = new Label("用户名：");
+        userNameLabel.getStyleClass().add("form-label");
         TextField userNameField = new TextField();
+        userNameField.getStyleClass().add("form-text-field");
         Label passwordLabel = new Label("密码:");
+        passwordLabel.getStyleClass().add("form-label");
         PasswordField passwordField = new PasswordField();
+        passwordField.getStyleClass().add("form-text-field");
+        StackPane loginPasswordBox = createPasswordBox(passwordField);
         Button loginButton = new Button("登录");
         Button registerButton = new Button("注册");
         Button visitorButton = new Button("游客登录");
-        HBox buttonBox = new HBox(15);
+        UIAnimations.addHoverScale(loginButton);
+        UIAnimations.addHoverScale(registerButton);
+        UIAnimations.addHoverScale(visitorButton);
+
+        HBox buttonBox = new HBox();
+        buttonBox.getStyleClass().add("login-button-box");
         buttonBox.getChildren().addAll(registerButton, visitorButton);
 
+        gridPane.add(titleLabel, 1, 0, 2, 1);
         gridPane.add(userNameLabel, 1, 1);
         gridPane.add(userNameField, 2, 1);
         gridPane.add(passwordLabel, 1, 2);
-        gridPane.add(passwordField, 2, 2);
+        gridPane.add(loginPasswordBox, 2, 2);
         gridPane.add(loginButton, 1, 3);
         gridPane.add(buttonBox, 2, 3);
 
@@ -55,14 +68,18 @@ public class LoginSystem {
         stackPane.setBackground(new Background(new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(100, 100, true, true, false, true))));
 
         Scene loginscene = new Scene(stackPane, 768, 432);
+        loginscene.getStylesheets().add(ResourceLoader.stylesheet("/css/style.css"));
         stage.setTitle("登录界面");
         stage.setScene(loginscene);
         stage.show();
+        stage.centerOnScreen();
+        UIAnimations.addFadeIn(stackPane);
 
         loginButton.setOnAction(_ -> {
             try {
                 if (CheckUser(userNameField.getText(), passwordField.getText())) {
                     Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                    UIUtils.styleDialog(alert);
                     alert.setTitle("");
                     alert.setHeaderText("登录成功");
                     alert.setContentText("欢迎进入游戏");
@@ -71,6 +88,7 @@ public class LoginSystem {
                     Choice.ChooseModel(stage, new User(userNameField.getText(), passwordField.getText()));
                 } else {
                     Alert alert = new Alert(Alert.AlertType.ERROR);
+                    UIUtils.styleDialog(alert);
                     alert.setTitle("");
                     alert.setHeaderText("登录失败");
                     alert.setContentText("您的账号不存在或密码错误");
@@ -85,6 +103,7 @@ public class LoginSystem {
 
         visitorButton.setOnAction(_ -> {
             Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            UIUtils.styleDialog(alert);
             alert.setTitle("");
             alert.setHeaderText("您将以游客身份进入游戏");
             alert.setContentText("您游玩过程中的数据将不会被保存");
@@ -99,35 +118,60 @@ public class LoginSystem {
     public static void LoadRegister(Stage stage) {
         StackPane stackPane = new StackPane();
         GridPane gridPane = new GridPane();
-        gridPane.setAlignment(Pos.CENTER);
-        gridPane.setHgap(10);
-        gridPane.setVgap(10);
+        gridPane.getStyleClass().addAll("register-grid", "form-card");
+        gridPane.setMaxSize(Region.USE_PREF_SIZE, Region.USE_PREF_SIZE);
 
-        Label hintmessage = new Label("请输入您的用户名和密码进行注册");
-        Label userNameLabel = new Label("用户名");
+        Label titleLabel = new Label("注册新用户");
+        titleLabel.getStyleClass().add("form-title");
+        GridPane.setHalignment(titleLabel, javafx.geometry.HPos.CENTER);
+
+        Label hintmessage = new Label("请输入用户名和密码");
+        hintmessage.getStyleClass().add("form-label");
+        Label userNameLabel = new Label("用户名：");
+        userNameLabel.getStyleClass().add("form-label");
         TextField userNameField = new TextField();
+        userNameField.getStyleClass().add("form-text-field");
         Label passwordLabel = new Label("密码:");
+        passwordLabel.getStyleClass().add("form-label");
         PasswordField passwordField = new PasswordField();
+        passwordField.getStyleClass().add("form-text-field");
+        StackPane registerPasswordBox = createPasswordBox(passwordField);
         Button registerButton = new Button("确定注册");
+        Button backButton = new Button("返回登录");
+        UIAnimations.addHoverScale(registerButton);
+        UIAnimations.addHoverScale(backButton);
 
-        gridPane.add(userNameLabel, 0, 1);
-        gridPane.add(userNameField, 1, 1);
-        gridPane.add(passwordLabel, 0, 2);
-        gridPane.add(passwordField, 1, 2);
-        gridPane.add(hintmessage, 0, 0);
-        gridPane.add(registerButton, 0, 3);
+        HBox buttonBox = new HBox();
+        buttonBox.setSpacing(15);
+        buttonBox.setAlignment(javafx.geometry.Pos.CENTER);
+        buttonBox.getChildren().addAll(registerButton, backButton);
+
+        gridPane.add(titleLabel, 0, 0, 2, 1);
+        gridPane.add(hintmessage, 0, 1, 2, 1);
+        GridPane.setHalignment(hintmessage, javafx.geometry.HPos.CENTER);
+        gridPane.add(userNameLabel, 0, 2);
+        gridPane.add(userNameField, 1, 2);
+        gridPane.add(passwordLabel, 0, 3);
+        gridPane.add(registerPasswordBox, 1, 3);
+        gridPane.add(buttonBox, 0, 4, 2, 1);
 
         stackPane.getChildren().add(gridPane);
         Image image = new Image(ResourceLoader.resourceUrl("/pictures/wallhaven-l8wvzl.jpg").toExternalForm());
         stackPane.setBackground(new Background(new BackgroundImage(image, BackgroundRepeat.NO_REPEAT, BackgroundRepeat.NO_REPEAT, BackgroundPosition.CENTER, new BackgroundSize(100, 100, true, true, false, true))));
         Scene registerScene = new Scene(stackPane, 768, 432);
+        registerScene.getStylesheets().add(ResourceLoader.stylesheet("/css/style.css"));
         stage.setTitle("注册界面");
         stage.setScene(registerScene);
         stage.show();
+        stage.centerOnScreen();
+        UIAnimations.addFadeIn(stackPane);
+
+        backButton.setOnAction(_ -> LoginSystem.LoadLogin(stage));
 
         registerButton.setOnAction(_ -> {
             if (userNameField.getText().isEmpty() || passwordField.getText().isEmpty()) {
                 Alert alert = new Alert(Alert.AlertType.WARNING);
+                UIUtils.styleDialog(alert);
                 alert.setTitle("");
                 alert.setHeaderText("警告");
                 alert.setContentText("请输入用户名和密码");
@@ -138,6 +182,7 @@ public class LoginSystem {
             try {
                 if (CheckUser(userNameField.getText())) {
                     Alert alert = new Alert(Alert.AlertType.WARNING);
+                    UIUtils.styleDialog(alert);
                     alert.setTitle("");
                     alert.setHeaderText("警告");
                     alert.setContentText("您所输入的用户名已存在");
@@ -151,6 +196,7 @@ public class LoginSystem {
                 SaveUserToRegistry(user);
 
                 Alert alert = new Alert(Alert.AlertType.INFORMATION);
+                UIUtils.styleDialog(alert);
                 alert.setTitle("");
                 alert.setHeaderText(username + "，您已注册成功");
                 alert.setContentText("请点击确定登录游戏");
@@ -248,5 +294,40 @@ public class LoginSystem {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 is unavailable", e);
         }
+    }
+
+    private static StackPane createPasswordBox(PasswordField passwordField) {
+        TextField visiblePasswordField = new TextField();
+        visiblePasswordField.getStyleClass().add("form-text-field");
+        visiblePasswordField.setVisible(false);
+        visiblePasswordField.setManaged(false);
+        visiblePasswordField.textProperty().bindBidirectional(passwordField.textProperty());
+
+        passwordField.setStyle("-fx-padding: 8 30 8 12;");
+        visiblePasswordField.setStyle("-fx-padding: 8 30 8 12;");
+
+        Button toggleButton = new Button("👁");
+        String baseStyle = "-fx-background-color: transparent; -fx-cursor: hand; -fx-text-fill: #333; -fx-font-size: 14px; -fx-padding: 0 8 0 0;";
+        toggleButton.setStyle(baseStyle + " -fx-strikethrough: true;");
+
+        toggleButton.setOnAction(e -> {
+            if (passwordField.isVisible()) {
+                passwordField.setVisible(false);
+                passwordField.setManaged(false);
+                visiblePasswordField.setVisible(true);
+                visiblePasswordField.setManaged(true);
+                toggleButton.setStyle(baseStyle + " -fx-strikethrough: false;");
+            } else {
+                passwordField.setVisible(true);
+                passwordField.setManaged(true);
+                visiblePasswordField.setVisible(false);
+                visiblePasswordField.setManaged(false);
+                toggleButton.setStyle(baseStyle + " -fx-strikethrough: true;");
+            }
+        });
+
+        StackPane fieldsPane = new StackPane(passwordField, visiblePasswordField, toggleButton);
+        StackPane.setAlignment(toggleButton, javafx.geometry.Pos.CENTER_RIGHT);
+        return fieldsPane;
     }
 }
